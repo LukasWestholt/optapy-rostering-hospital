@@ -113,10 +113,10 @@ class ShiftModel(BaseModel):
     end: datetime.datetime
     location: str
     required_skills: list[str]
-    employee: Employee | None
+    employee: EmployeeModel | None
 
 @optapy.planning_solution
-class EmployeeSchedule(BaseModel):
+class EmployeeSchedule:
     schedule_state: ScheduleState
     availability_list: list[Availability]
     employee_list: list[Employee]
