@@ -217,7 +217,7 @@ schedule: EmployeeSchedule = generate_demo_data()
 def get_schedule():
     schedule.solver_status = get_solver_status()
     schedule.score = score_manager.updateScore(schedule)
-    return schedule #.to_dict()
+    return schedule
 
 
 def get_solver_status() -> SolverStatus:
