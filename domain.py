@@ -116,14 +116,14 @@ class Shift:
 
     def __str__(self):
         return f'Shift(id={self.id}, start={self.start}, end={self.end}, location={self.location}, ' \
-               f'required_skill={self.required_skills}, employee={self.employee})'
+               f'required_skills={self.required_skills}, employee={self.employee})'
 
     def to_dict(self):
         return {
             'start': self.start.isoformat(),
             'end': self.end.isoformat(),
             'location': self.location,
-            'required_skill': self.required_skills,
+            'required_skills': self.required_skills,
             'employee': self.employee.to_dict() if self.employee is not None else None
         }
 

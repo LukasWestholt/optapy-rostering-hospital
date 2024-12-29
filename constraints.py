@@ -127,6 +127,8 @@ def undesired_day_for_employee(constraint_factory: ConstraintFactory) -> Constra
 # +Unterplanung lassen wir weg
 # +Überstundenabbau bei Überplanung
 
+# TODO Die Nachtschicht darf nicht in einen unavilable day ragen!
+
 # Entweder: Kurzer Tagdienst + Nachtdienst
 # Oder: Langer Tagdienst
 #

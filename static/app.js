@@ -197,7 +197,7 @@ function refreshSchedule() {
                         .append($(`<h5 class="card-title mb-2"/>)`)
                                 .append("Unassigned"))
                         .append($('<div/>')
-                                .append($(`<span class="badge mr-1 mt-1" style="background-color:#d3d7cf">${shift.required_skill}</span>`)));
+                                .append($(`<span class="badge mr-1 mt-1" style="background-color:#d3d7cf">${shift.required_skills}</span>`)));
 
                 byLocationItemDataSet.add({
                     id : 'shift-' + index, group: shift.location,
@@ -206,17 +206,20 @@ function refreshSchedule() {
                     style: "background-color: #EF292999"
                 });
             } else {
-                const skillColor = (shift.employee.skill_set.indexOf(shift.required_skill) === -1? '#ef2929' : '#8ae234');
+                const allSkillsMatch = shift.required_skills.every(skill =>
+                    shift.employee.skill_set.has(skill)
+                );
+                const skillColor = (!allSkillsMatch ? '#ef2929' : '#8ae234');
                 const byEmployeeShiftElement = $('<div class="card-body p-2"/>')
                         .append($(`<h5 class="card-title mb-2"/>)`)
                                 .append(shift.location))
                         .append($('<div/>')
-                                .append($(`<span class="badge mr-1 mt-1" style="background-color:${skillColor}">${shift.required_skill}</span>`)));
+                                .append($(`<span class="badge mr-1 mt-1" style="background-color:${skillColor}">${shift.required_skills}</span>`)));
                 const byLocationShiftElement = $('<div class="card-body p-2"/>')
                         .append($(`<h5 class="card-title mb-2"/>)`)
                                 .append(shift.employee.name))
                         .append($('<div/>')
-                                .append($(`<span class="badge mr-1 mt-1" style="background-color:${skillColor}">${shift.required_skill}</span>`)));
+                                .append($(`<span class="badge mr-1 mt-1" style="background-color:${skillColor}">${shift.required_skills}</span>`)));
 
                 const shiftColor =  getShiftColor(shift, availabilityMap);
                 byEmployeeItemDataSet.add({

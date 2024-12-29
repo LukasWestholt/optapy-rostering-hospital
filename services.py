@@ -186,7 +186,7 @@ def generate_shift_for_timeslot(timeslot_start: datetime.datetime, timeslot_end:
         shift.id = id_generator
         shift.start = timeslot_start
         shift.end = timeslot_end
-        shift.required_skills = [location]
+        shift.required_skills = [location, "Test"]
         shift.location = location
         shift.employee = None
         id_generator += 1
