@@ -7,9 +7,11 @@ from optapy.types import Duration, SolverStatus
 from optapy.score import HardSoftScore
 from constraints import employee_scheduling_constraints
 from typing import Optional
-from flask import Flask, jsonify
+from flask import Flask
+from flask_restx import Api, Resource, fields
 
 app = Flask(__name__)
+api = Api(app, version='1.0', title='Schedule API', description='API for scheduling')
 
 
 def next_weekday(d, weekday):
@@ -245,16 +247,35 @@ solver_manager = solver_manager_create(solver_config)
 score_manager = score_manager_create(solver_manager)
 last_score = HardSoftScore.ZERO
 
+def create_model_from_class(api, name, cls):
+    # Extract annotations
+    annotations = cls.__annotations__
+    model_fields = {}
+    for field_name, field_type in annotations.items():
+        if field_type == str:
+            model_fields[field_name] = fields.String
+        elif field_type == list[str]:
+            model_fields[field_name] = fields.List(fields.String)
+        else:
+            raise NotImplementedError((field_name, field_type))
+            # Add more type mappings as needed
+            model_fields[field_name] = fields.Raw
+    return api.model(name, model_fields)
 
-@app.route('/schedule')
-def get_schedule():
-    global schedule
-    solver_status = get_solver_status()
-    solution = schedule
-    score = score_manager.updateScore(solution)
-    solution.solver_status = solver_status
-    solution.score = score
-    return jsonify(solution.to_dict())
+employee_schedule_model = create_model_from_class(api, 'EmployeeSchedule', EmployeeSchedule)
+
+@api.route('/schedule')
+class ScheduleService(Resource):
+    @api.response(200, 'OK')
+    @api.marshal_with(employee_schedule_model)
+    def get(self):
+        global schedule
+        solver_status = get_solver_status()
+        solution = schedule
+        score = score_manager.updateScore(solution)
+        solution.solver_status = solver_status
+        solution.score = score
+        return solution.to_dict()
 
 
 def get_solver_status():
@@ -266,33 +287,34 @@ def error_handler(problem_id, exception):
     exception.printStackTrace()
 
 
-@app.route('/solve', methods=['POST'])
-def solve():
-    solver_manager.solveAndListen(SINGLETON_ID, find_by_id, save, error_handler)
-    return dict()
+@api.route('/solve', methods=['POST'])
+class SolveSchedule(Resource):
+    @api.response(200, 'OK')
+    def post(self):
+        solver_manager.solveAndListen(SINGLETON_ID, find_by_id, save, error_handler)
 
 
-@app.route('/publish', methods=['POST'])
-def publish():
-    global schedule
-    if get_solver_status() != SolverStatus.NOT_SOLVING:
-        raise RuntimeError('Cannot publish a schedule while solving in progress.')
-    schedule_state = schedule.schedule_state
-    new_historic_date = schedule_state.first_draft_date
-    new_draft_date = schedule_state.first_draft_date + datetime.timedelta(days=schedule_state.publish_length)
+@api.route('/publish')
+class PublishSchedule(Resource):
+    @api.response(200, 'OK')
+    def post(self):
+        global schedule
+        if get_solver_status() != SolverStatus.NOT_SOLVING:
+            raise RuntimeError('Cannot publish a schedule while solving in progress.')
+        schedule_state = schedule.schedule_state
+        new_historic_date = schedule_state.first_draft_date
+        new_draft_date = schedule_state.first_draft_date + datetime.timedelta(days=schedule_state.publish_length)
 
-    schedule_state.last_historic_date = new_historic_date
-    schedule_state.first_draft_date = new_draft_date
+        schedule_state.last_historic_date = new_historic_date
+        schedule_state.first_draft_date = new_draft_date
 
-    generate_draft_shifts()
-    return dict()
+        generate_draft_shifts()
 
-
-@app.route('/stopSolving', methods=['POST'])
-def stop_solving():
-    solver_manager.terminateEarly(SINGLETON_ID)
-    return dict()
-
+@api.route('/stopSolving')
+class StopSolving(Resource):
+    @api.response(200, 'OK')
+    def post(self):
+        solver_manager.terminateEarly(SINGLETON_ID)
 
 def find_by_id(schedule_id):
     global schedule
