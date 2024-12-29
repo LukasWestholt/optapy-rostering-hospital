@@ -150,6 +150,12 @@ class EmployeeScheduleModel(BaseModel):
     solver_status: str | None
     score: str | None
 
+    class Config:
+        json_encoders = {
+            optapy.types.SolverStatus: lambda v: v.toString(),
+            optapy.score.SimpleScore:  lambda v: v.toString(),
+        }
+
     @classmethod
     @model_validator(mode="before")
     def apply_toString_on_init(cls, data: any) -> any:
