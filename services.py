@@ -8,16 +8,13 @@ from optapy import solver_manager_create, score_manager_create
 import optapy.config
 from optapy.types import Duration, SolverStatus
 from optapy.score import HardSoftScore
-from flask import Flask
-from flask_restx import Api, Resource, fields
+from fastapi import FastAPI
 
 from constraints import employee_scheduling_constraints
 from domain import Employee, Shift, Availability, AvailabilityType, ScheduleState, EmployeeSchedule
 from helpers import join_all_combinations, pick_subset, pick_random
 
-app = Flask("roastering-hospital")
-api = Api(app, version='1.0', title='Schedule API', description='API for scheduling')
-
+api = FastAPI(title="Schedule API", version="1.0", description="API for scheduling")
 
 def next_weekday(d, weekday):
     days_ahead = weekday - d.weekday()
@@ -209,34 +206,13 @@ solver_manager = solver_manager_create(solver_config)
 score_manager = score_manager_create(solver_manager)
 last_score = HardSoftScore.ZERO
 
-def create_model_from_class(api, name, cls):
-    # Extract annotations
-    annotations = get_type_hints(cls)
-    print(annotations)
-    model_fields = {}
-    for field_name, field_type in annotations.items():
-        if field_type == str:
-            model_fields[field_name] = fields.String
-        elif field_type == list[str]:
-            model_fields[field_name] = fields.List(fields.String)
-        else:
-            raise NotImplementedError((field_name, field_type))
-            # Add more type mappings as needed
-            #model_fields[field_name] = fields.Raw
-    return api.model(name, model_fields)
-
 schedule: EmployeeSchedule = generate_demo_data()
 
-employee_schedule_model = create_model_from_class(api, 'EmployeeSchedule', EmployeeSchedule)
-
-@api.route('/schedule')
-class ScheduleService(Resource):
-    #@api.response(200, 'OK')
-    @api.marshal_with(employee_schedule_model)
-    def get(self):
-        schedule.solver_status = get_solver_status()
-        schedule.score = score_manager.updateScore(schedule)
-        return schedule.to_dict()
+@api.get('/schedule')
+def get_schedule(self):
+    schedule.solver_status = get_solver_status()
+    schedule.score = score_manager.updateScore(schedule)
+    return schedule.to_dict()
 
 
 def get_solver_status() -> SolverStatus:
@@ -248,33 +224,26 @@ def error_handler(problem_id, exception):
     exception.printStackTrace()
 
 
-@api.route('/solve', methods=['POST'])
-class SolveSchedule(Resource):
-    @api.response(200, 'OK')
-    def post(self):
-        solver_manager.solveAndListen(SINGLETON_ID, find_by_id, save, error_handler)
+@api.post('/solve')
+def solve(self):
+    solver_manager.solveAndListen(SINGLETON_ID, find_by_id, save, error_handler)
 
+@api.post('/publish')
+def publish(self):
+    if get_solver_status() != SolverStatus.NOT_SOLVING:
+        raise RuntimeError('Cannot publish a schedule while solving in progress.')
+    schedule_state = schedule.schedule_state
+    new_historic_date = schedule_state.first_draft_date
+    new_draft_date = schedule_state.first_draft_date + datetime.timedelta(days=schedule_state.publish_length)
 
-@api.route('/publish')
-class PublishSchedule(Resource):
-    @api.response(200, 'OK')
-    def post(self):
-        if get_solver_status() != SolverStatus.NOT_SOLVING:
-            raise RuntimeError('Cannot publish a schedule while solving in progress.')
-        schedule_state = schedule.schedule_state
-        new_historic_date = schedule_state.first_draft_date
-        new_draft_date = schedule_state.first_draft_date + datetime.timedelta(days=schedule_state.publish_length)
+    schedule_state.last_historic_date = new_historic_date
+    schedule_state.first_draft_date = new_draft_date
 
-        schedule_state.last_historic_date = new_historic_date
-        schedule_state.first_draft_date = new_draft_date
+    generate_draft_shifts()
 
-        generate_draft_shifts()
-
-@api.route('/stopSolving')
-class StopSolving(Resource):
-    @api.response(200, 'OK')
-    def post(self):
-        solver_manager.terminateEarly(SINGLETON_ID)
+@api.post('/stopSolving')
+def stop_solving(self):
+    solver_manager.terminateEarly(SINGLETON_ID)
 
 def find_by_id(schedule_id):
     if schedule_id != SINGLETON_ID:
