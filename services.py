@@ -11,7 +11,7 @@ from flask_restx import Api, Resource, fields
 
 from constraints import employee_scheduling_constraints
 from domain import Employee, Shift, Availability, AvailabilityType, ScheduleState, EmployeeSchedule
-from helpers import join_all_combinations
+from helpers import join_all_combinations, pick_subset, pick_random
 
 app = Flask(__name__)
 api = Api(app, version='1.0', title='Schedule API', description='API for scheduling')
@@ -195,16 +195,6 @@ def generate_draft_shifts():
             schedule.availability_list.append(availability)
         schedule.shift_list.extend(generate_shifts_for_day(date, random))
 
-
-def pick_random(source: list, random: Random):
-    return random.choice(source)
-
-
-def pick_subset(source: list, random: Random, *distribution: int):
-    if not source:
-        return []
-    item_count = random.choices(range(len(distribution)), distribution)
-    return random.sample(source, item_count[0])
 
 
 SINGLETON_ID = 1
