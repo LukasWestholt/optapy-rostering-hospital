@@ -147,13 +147,15 @@ class EmployeeScheduleModel(BaseModel):
     availability_list: list[AvailabilityModel]
     employee_list: list[EmployeeModel]
     shift_list: list[ShiftModel]
-    solver_status: str | None
-    score: str | None
+    solver_status: optapy.types.SolverStatus | None
+    score: optapy.score.SimpleScore | None
 
     class Config:
         json_encoders = {
             optapy.types.SolverStatus: lambda v: v.toString(),
             optapy.score.SimpleScore:  lambda v: v.toString(),
+            optapy.types.SolverStatus | None: lambda v: v.toString() if v is not None else None,
+            optapy.score.SimpleScore | None:  lambda v: v.toString() if v is not None else None,
         }
 
     @classmethod
