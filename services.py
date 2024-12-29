@@ -125,11 +125,8 @@ def id_generator(start=0) -> Iterator[int]:
         current += 1
 id_gen = id_generator()
 
-schedule: EmployeeSchedule | None = None
 
-
-def generate_demo_data():
-    global schedule
+def generate_demo_data() -> EmployeeSchedule:
     initial_roster_length_in_days = 14
     start_date = next_weekday(datetime.date.today(), 0)  # next Monday
 
@@ -155,13 +152,14 @@ def generate_demo_data():
             availability = Availability(employee, date, availability_type)
             availability_list.append(availability)
         shift_list.extend(generate_shifts_for_day(date, random))
-    schedule = EmployeeSchedule(
+    return EmployeeSchedule(
         schedule_state,
         availability_list,
         employee_list,
         shift_list,
     )
 
+schedule: EmployeeSchedule = generate_demo_data()
 
 def generate_shifts_for_day(date: datetime.date, random: Random):
     out = []
@@ -179,14 +177,12 @@ def generate_shifts_for_day(date: datetime.date, random: Random):
 
 def generate_shift_for_timeslot(timeslot_start: datetime.datetime, timeslot_end: datetime.datetime,
                                 location: str, times: int = 1):
-    global id_gen
     for i in range(times):
         shift = Shift(next(id_gen), timeslot_start, timeslot_end, location, [location])
         yield shift
 
 
 def generate_draft_shifts():
-    global schedule
     random = Random(0)
     for i in range(schedule.schedule_state.publish_length):
         employees_with_availabilities_on_day = pick_subset(schedule.employee_list, random, 4, 3, 2, 1)
@@ -223,7 +219,6 @@ def join_all_combinations(*part_arrays: list[str]):
 
 SINGLETON_ID = 1
 solver_config = optapy.config.solver.SolverConfig()
-# noinspection PyTypeChecker
 solver_config\
     .withSolutionClass(EmployeeSchedule)\
     .withEntityClasses(Shift)\
@@ -256,16 +251,12 @@ class ScheduleService(Resource):
     #@api.response(200, 'OK')
     @api.marshal_with(employee_schedule_model)
     def get(self):
-        global schedule
-        solver_status = get_solver_status()
-        solution = schedule
-        score = score_manager.updateScore(solution)
-        solution.solver_status = solver_status
-        solution.score = score
-        return solution.to_dict()
+        schedule.solver_status = get_solver_status()
+        schedule.score = score_manager.updateScore(schedule)
+        return schedule.to_dict()
 
 
-def get_solver_status():
+def get_solver_status() -> SolverStatus:
     return solver_manager.getSolverStatus(SINGLETON_ID)
 
 
@@ -285,7 +276,6 @@ class SolveSchedule(Resource):
 class PublishSchedule(Resource):
     @api.response(200, 'OK')
     def post(self):
-        global schedule
         if get_solver_status() != SolverStatus.NOT_SOLVING:
             raise RuntimeError('Cannot publish a schedule while solving in progress.')
         schedule_state = schedule.schedule_state
@@ -304,7 +294,6 @@ class StopSolving(Resource):
         solver_manager.terminateEarly(SINGLETON_ID)
 
 def find_by_id(schedule_id):
-    global schedule
     if schedule_id != SINGLETON_ID:
         raise ValueError(f'There is no schedule with id ({schedule_id})')
     return schedule

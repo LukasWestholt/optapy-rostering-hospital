@@ -1,5 +1,4 @@
-from services import app, generate_demo_data
+from services import app
 
 if __name__ == "__main__":
-    generate_demo_data()
     app.run(debug=True)
