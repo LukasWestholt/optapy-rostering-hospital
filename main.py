@@ -11,7 +11,9 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
 from constraints import employee_scheduling_constraints
-from domain import Employee, Shift, Availability, AvailabilityType, ScheduleState, EmployeeSchedule
+from domain import Employee, Shift, Availability, AvailabilityType, ScheduleState, EmployeeSchedule, \
+    EmployeeScheduleModel
+
 from helpers import join_all_combinations, pick_subset, pick_random
 
 api = FastAPI(title="Schedule API", version="1.0", description="API for scheduling")
@@ -211,7 +213,7 @@ last_score = HardSoftScore.ZERO
 
 schedule: EmployeeSchedule = generate_demo_data()
 
-@api.get('/schedule')
+@api.get('/schedule', response_model=EmployeeScheduleModel)
 def get_schedule():
     schedule.solver_status = get_solver_status()
     schedule.score = score_manager.updateScore(schedule)

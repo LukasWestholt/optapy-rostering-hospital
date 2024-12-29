@@ -7,7 +7,7 @@ from pydantic import BaseModel
 
 
 @optapy.problem_fact
-class Employee(BaseModel):
+class Employee:
     name: str
     skill_set: list[str]
 
@@ -20,6 +20,10 @@ class Employee(BaseModel):
             'skill_set': self.skill_set
         }
 
+class EmployeeModel(BaseModel):
+    name: str
+    skill_set: list[str]
+
 
 class AvailabilityType(enum.Enum):
     DESIRED = 'DESIRED'
@@ -28,7 +32,7 @@ class AvailabilityType(enum.Enum):
 
 
 @optapy.problem_fact
-class Availability(BaseModel):
+class Availability:
     employee: Employee
     date: datetime.date
     availability_type: AvailabilityType
@@ -43,6 +47,10 @@ class Availability(BaseModel):
             'availability_type': self.availability_type.value
         }
 
+class AvailabilityModel(BaseModel):
+    employee: Employee
+    date: datetime.date
+    availability_type: AvailabilityType
 
 class ScheduleState(BaseModel):
     publish_length: int
@@ -67,7 +75,7 @@ def shift_pinning_filter(solution, shift):
 
 
 @optapy.planning_entity(pinning_filter=shift_pinning_filter)
-class Shift(BaseModel):
+class Shift:
     id: int
     start: datetime.datetime
     end: datetime.datetime
@@ -99,6 +107,13 @@ class Shift(BaseModel):
             'employee': self.employee.to_dict() if self.employee is not None else None
         }
 
+class ShiftModel(BaseModel):
+    id: int
+    start: datetime.datetime
+    end: datetime.datetime
+    location: str
+    required_skills: list[str]
+    employee: Employee | None
 
 @optapy.planning_solution
 class EmployeeSchedule(BaseModel):
@@ -138,3 +153,11 @@ class EmployeeSchedule(BaseModel):
             'solver_status': self.solver_status.toString(),
             'score': self.score.toString(),
         }
+
+class EmployeeScheduleModel(BaseModel):
+    schedule_state: ScheduleState
+    availability_list: list[AvailabilityModel]
+    employee_list: list[EmployeeModel]
+    shift_list: list[ShiftModel]
+    solver_status: str | None
+    score: str | None
