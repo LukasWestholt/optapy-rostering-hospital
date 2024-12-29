@@ -1,58 +1,93 @@
-= OptaPy Quickstarts
+= Employee Scheduling
 
-== Overview of all Quickstarts
+Schedule shifts to employees, accounting for employee availability and shift skill requirements.
 
+image::../images/employee-scheduling-screenshot.png[]
 
-|===
-|Quickstart | Binder Link
-
-a|* <<school-timetabling, School timetabling>>
-* <<vehicle-routing, Vehicle routing>>
-* <<employee-scheduling, Employee scheduling>>
-
-a|* https://mybinder.org/v2/gh/optapy/optapy-quickstarts/stable?filepath=school-timetabling/school-timetabling-quickstart.ipynb[image:https://mybinder.org/badge_logo.svg[Binder]]
-* https://mybinder.org/v2/gh/optapy/optapy-quickstarts/stable?filepath=vehicle-routing/vehicle-routing-quickstart.ipynb[image:https://mybinder.org/badge_logo.svg[Binder]]
-* Not Available
-|===
-
-== Get started
-
-Click the binder link to open the quickstart's notebook and run it in your browser.
+* <<requirements,Requirements>>
+* <<run,Run the application>>
+* <<test,Test the application>>
 
 
-== Quickstarts
+[[requirements]]
+== Requirements
 
-[[school-timetabling]]
-=== School timetabling
 
-https://mybinder.org/v2/gh/optapy/optapy-quickstarts/stable?filepath=school-timetabling/school-timetabling-quickstart.ipynb[image:https://mybinder.org/badge_logo.svg[Binder]]
+* https://www.python.org[Install Python 3.9 or later.]
+* https://adoptopenjdk.net[Install JDK 11 or later] with the environment variable `JAVA_HOME` configured to the JDK installation directory.
 
-Assign lessons to timeslots and rooms to produce a better schedule for teachers and students.
+[[run]]
+== Run the application
 
-image::images/school-timetabling-screenshot.png[]
+. Git clone the optapy-quickstarts repo and navigate to this directory:
++
+[source, shell]
+----
+$ git clone https://github.com/optapy/optapy-quickstarts.git
+$ cd optapy-quickstarts/employee-scheduling
+----
 
-* link:school-timetabling/README.adoc[Run the school timetabling quickstart locally]
+. Activate a virtual environment
++
+[source, shell]
+----
+$ python -m venv venv
+$ . venv/bin/activate
+----
 
-[[vehicle-routing]]
-=== Vehicle routing
+. Install the quickstart requirements to the virtual environment
++
+[source, shell]
+----
+$ pip install -r requirements.txt
+----
 
-https://mybinder.org/v2/gh/optapy/optapy-quickstarts/stable?filepath=vehicle-routing/vehicle-routing-quickstart.ipynb[image:https://mybinder.org/badge_logo.svg[Binder]]
+. Run the application
++
+[source, shell]
+----
+$ python main.py
+----
 
-Find the most efficient routes for a fleet of vehicles.
+. Visit http://localhost:5000/static/index.html in your browser.
 
-image::images/vehicle-routing-screenshot.png[]
+. Click on the *Solve* button.
 
-* link:vehicle-routing/README.adoc[Run the vehicle routing quickstart locally]
 
-[[employee-scheduling]]
-=== Employee scheduling
+[[test]]
+== Run the tests
 
-Assign employees to shifts to improve shifts schedule.
+. Git clone the optapy-quickstarts repo and navigate to this directory:
++
+[source, shell]
+----
+$ git clone https://github.com/optapy/optapy-quickstarts.git
+$ cd optapy-quickstarts/employee-scheduling
+----
 
-image::images/employee-scheduling-screenshot.png[]
+. Activate a virtual environment
++
+[source, shell]
+----
+$ python -m venv venv
+$ . venv/bin/activate
+----
 
-* link:employee-scheduling/README.adoc[Run the employee scheduling quickstart locally]
+. Install the quickstart requirements and a testing framework to the virtual environment
++
+[source, shell]
+----
+$ pip install -r requirements.txt pytest
+----
+
+. Run the tests
++
+[source, shell]
+----
+$ python -m pytest tests.py
+----
+
 
 == More information
 
-Learn more on https://www.optapy.org[www.optapy.org].
+Visit https://www.optapy.org/[www.optapy.org].

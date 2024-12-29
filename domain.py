@@ -1,4 +1,3 @@
-import optapy
 import optapy.types
 import optapy.score
 import datetime
@@ -92,16 +91,16 @@ class Shift:
     start: datetime.datetime
     end: datetime.datetime
     location: str
-    required_skill: str
-    employee: Employee
+    required_skills: list[str]
+    employee: Employee | None
 
     def __init__(self, id: int = None, start: datetime.datetime = None, end: datetime.datetime = None,
-                 location: str = None, required_skill: str = None, employee: Employee = None):
+                 location: str = None, required_skills: list[str] = None, employee: Employee | None = None):
         self.id = id
         self.start = start
         self.end = end
         self.location = location
-        self.required_skill = required_skill
+        self.required_skills = required_skills
         self.employee = employee
 
     @optapy.planning_id
@@ -117,14 +116,14 @@ class Shift:
 
     def __str__(self):
         return f'Shift(id={self.id}, start={self.start}, end={self.end}, location={self.location}, ' \
-               f'required_skill={self.required_skill}, employee={self.employee})'
+               f'required_skill={self.required_skills}, employee={self.employee})'
 
     def to_dict(self):
         return {
             'start': self.start.isoformat(),
             'end': self.end.isoformat(),
             'location': self.location,
-            'required_skill': self.required_skill,
+            'required_skill': self.required_skills,
             'employee': self.employee.to_dict() if self.employee is not None else None
         }
 

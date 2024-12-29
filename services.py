@@ -19,24 +19,101 @@ def next_weekday(d, weekday):
     return d + datetime.timedelta(days_ahead)
 
 
-FIRST_NAMES = ["Amy", "Beth", "Chad", "Dan", "Elsa", "Flo", "Gus", "Hugo", "Ivy", "Jay"]
-LAST_NAMES = ["Cole", "Fox", "Green", "Jones", "King", "Li", "Poe", "Rye", "Smith", "Watt"]
-REQUIRED_SKILLS = ["Doctor", "Nurse"]
-OPTIONAL_SKILLS = ["Anaesthetics"]
-LOCATIONS = ["Ambulatory care", "Critical care", "Pediatric care"]
-SHIFT_LENGTH = datetime.timedelta(hours=8)
-MORNING_SHIFT_START_TIME = datetime.time(hour=6)
-DAY_SHIFT_START_TIME = datetime.time(hour=9)
-AFTERNOON_SHIFT_START_TIME = datetime.time(hour=14)
-NIGHT_SHIFT_START_TIME = datetime.time(hour=22)
+FIRST_NAMES = ["Amy", "Beth", "Chad", "Dan", "Elsa", "Flo", "Gus", "Hugo", "Ivy", "Jay", "Kate", "Lisa", "Mary", "Nina",
+               "Olivia", "Pat"]
+LAST_NAMES = ["Cole", "Fox", "Green", "Jones", "King", "Li", "Poe", "Rye", "Smith", "Watt", "Xavier", "Yang", "Zhang", "Müller", "Schmidt", "Schneider"]
 
-SHIFT_START_TIME_COMBOS = (
-    (MORNING_SHIFT_START_TIME, AFTERNOON_SHIFT_START_TIME),
-    (MORNING_SHIFT_START_TIME, AFTERNOON_SHIFT_START_TIME, NIGHT_SHIFT_START_TIME),
-    (MORNING_SHIFT_START_TIME, DAY_SHIFT_START_TIME, AFTERNOON_SHIFT_START_TIME, NIGHT_SHIFT_START_TIME)
-)
+LOCATION_SHIFT_EMPLOYEE_COUNT = {
+    "Notaufnahme": 1,
+    "Normalstation": 5,
+    "Intensivstation": 1,
+    "Visitendienst": 1,
+}
 
-location_to_shift_start_time_list_dict = dict()
+REQUIRED_SKILLS = list(LOCATION_SHIFT_EMPLOYEE_COUNT.keys())
+OPTIONAL_SKILLS = []
+EMPLOYEE_COUNT = 16
+
+SHIFT = {
+    "Notaufnahme": [
+        [
+            (datetime.time(hour=8), datetime.timedelta(hours=8, minutes=45)),
+            (datetime.time(hour=12), datetime.timedelta(hours=9)),
+            (datetime.time(hour=19, minute=45), datetime.timedelta(hours=12, minutes=45)),
+        ],
+        [
+            (datetime.time(hour=8), datetime.timedelta(hours=8, minutes=45)),
+            (datetime.time(hour=12), datetime.timedelta(hours=9)),
+            (datetime.time(hour=19, minute=45), datetime.timedelta(hours=12, minutes=45)),
+        ],
+        [
+            (datetime.time(hour=8), datetime.timedelta(hours=8, minutes=45)),
+            (datetime.time(hour=12), datetime.timedelta(hours=9)),
+            (datetime.time(hour=19, minute=45), datetime.timedelta(hours=12, minutes=45)),
+        ],
+        [
+            (datetime.time(hour=8), datetime.timedelta(hours=8, minutes=45)),
+            (datetime.time(hour=12), datetime.timedelta(hours=9)),
+            (datetime.time(hour=19, minute=45), datetime.timedelta(hours=12, minutes=45)),
+        ],
+        [
+            (datetime.time(hour=8), datetime.timedelta(hours=12, minutes=30)),
+            (datetime.time(hour=20), datetime.timedelta(hours=12, minutes=30)),
+        ],
+        [
+            (datetime.time(hour=8), datetime.timedelta(hours=12, minutes=30)),
+            (datetime.time(hour=20), datetime.timedelta(hours=12, minutes=30)),
+        ],
+        [
+            (datetime.time(hour=8), datetime.timedelta(hours=12, minutes=30)),
+            (datetime.time(hour=20), datetime.timedelta(hours=12, minutes=30)),
+        ]
+    ],
+    "Normalstation": [
+        [
+            (datetime.time(hour=8), datetime.timedelta(hours=8, minutes=30)),
+        ],
+        [
+            (datetime.time(hour=8), datetime.timedelta(hours=8, minutes=30)),
+        ],
+        [
+            (datetime.time(hour=8), datetime.timedelta(hours=8, minutes=30)),
+        ],
+        [
+            (datetime.time(hour=8), datetime.timedelta(hours=8, minutes=30)),
+        ],
+        [
+            (datetime.time(hour=8), datetime.timedelta(hours=8, minutes=30)),
+        ],
+        [],
+        []
+    ],
+    "Visitendienst": [
+        [],
+        [],
+        [],
+        [],
+        [],
+        [
+            (datetime.time(hour=10), datetime.timedelta(hours=6)),
+        ],
+        [
+            (datetime.time(hour=10), datetime.timedelta(hours=6)),
+        ]
+    ],
+    "Intensivstation": [
+        [
+            (datetime.time(hour=7, minute=30), datetime.timedelta(hours=12, minutes=45)),
+        ],
+        [
+            (datetime.time(hour=7, minute=30), datetime.timedelta(hours=9)),
+        ],
+        [
+            (datetime.time(hour=19, minute=30), datetime.timedelta(hours=12, minutes=45)),
+        ]
+    ]
+}
+
 id_generator = 0
 schedule: Optional[EmployeeSchedule] = None
 
@@ -53,17 +130,11 @@ def generate_demo_data():
     schedule_state.last_historic_date = START_DATE
 
     random = Random(0)
-
-    shift_template_index = 0
-    for location in LOCATIONS:
-        location_to_shift_start_time_list_dict[location] = SHIFT_START_TIME_COMBOS[shift_template_index]
-        shift_template_index = (shift_template_index + 1) % len(SHIFT_START_TIME_COMBOS)
-
     name_permutations = join_all_combinations(FIRST_NAMES, LAST_NAMES)
     random.shuffle(name_permutations)
 
     employee_list = []
-    for i in range(16):
+    for i in range(EMPLOYEE_COUNT):
         skills = pick_subset(OPTIONAL_SKILLS, random, 1, 3)
         skills.append(pick_random(REQUIRED_SKILLS, random))
         employee = Employee()
@@ -95,37 +166,31 @@ def generate_demo_data():
 
 def generate_shifts_for_day(date: datetime.date, random: Random):
     out = []
-    for location in LOCATIONS:
-        shift_start_time_list = location_to_shift_start_time_list_dict[location]
-        for shift_start_time in shift_start_time_list:
+    for location, shift_times_list in SHIFT.items():
+        if len(shift_times_list) == 7:
+            shift_times = shift_times_list[date.weekday()]
+        else:
+            shift_times = pick_random(shift_times_list, random)
+        for shift_start_time, shift_duration in shift_times:
             shift_start_date_time = datetime.datetime.combine(date, shift_start_time)
-            shift_end_date_time = shift_start_date_time + SHIFT_LENGTH
-            out.append(generate_shift_for_timeslot(shift_start_date_time, shift_end_date_time, location, random))
+            shift_end_date_time = shift_start_date_time + shift_duration
+            out.extend(list(generate_shift_for_timeslot(shift_start_date_time, shift_end_date_time, location, LOCATION_SHIFT_EMPLOYEE_COUNT[location])))
     return out
 
 
 def generate_shift_for_timeslot(timeslot_start: datetime.datetime, timeslot_end: datetime.datetime,
-                                location: str, random: Random):
+                                location: str, times: int = 1):
     global id_generator
-    shift_count = random.choices([1, 2], [0.8, 0.2])[0]
-
-    for i in range(shift_count):
-        required_skill = None
-
-        if random.randint(0, 1) == 1:
-            required_skill = pick_random(REQUIRED_SKILLS, random)
-        else:
-            required_skill = pick_random(OPTIONAL_SKILLS, random)
-
+    for i in range(times):
         shift = Shift()
         shift.id = id_generator
         shift.start = timeslot_start
         shift.end = timeslot_end
-        shift.required_skill = required_skill
+        shift.required_skills = [location]
         shift.location = location
         shift.employee = None
         id_generator += 1
-        return shift
+        yield shift
 
 
 def generate_draft_shifts():
@@ -149,6 +214,8 @@ def pick_random(source: list, random: Random):
 
 
 def pick_subset(source: list, random: Random, *distribution: int):
+    if not source:
+        return []
     item_count = random.choices(range(len(distribution)), distribution)
     return random.sample(source, item_count[0])
 
@@ -167,6 +234,7 @@ def join_all_combinations(*part_arrays: list[str]):
 
 SINGLETON_ID = 1
 solver_config = optapy.config.solver.SolverConfig()
+# noinspection PyTypeChecker
 solver_config\
     .withSolutionClass(EmployeeSchedule)\
     .withEntityClasses(Shift)\

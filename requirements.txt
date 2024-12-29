@@ -2,4 +2,4 @@ optapy==9.37.0b0
 ipywidgets
 ipyleaflet
 ipysheet
-
+Flask==2.0.2
