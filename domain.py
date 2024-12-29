@@ -3,7 +3,7 @@ import optapy.score
 import datetime
 import enum
 
-from pydantic import BaseModel, model_validator, field_serializer
+from pydantic import BaseModel, model_validator, field_serializer, ConfigDict
 
 
 @optapy.problem_fact
@@ -143,6 +143,8 @@ class EmployeeSchedule:
         self.score = score
 
 class EmployeeScheduleModel(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     schedule_state: ScheduleState
     availability_list: list[AvailabilityModel]
     employee_list: list[EmployeeModel]
