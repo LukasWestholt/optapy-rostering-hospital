@@ -154,11 +154,11 @@ class EmployeeScheduleModel(BaseModel):
 
 
     @field_serializer('solver_status')
-    def serialize_dt(self, solver_status: optapy.types.SolverStatus | None, _info):
+    def serialize_solver_status(self, solver_status: optapy.types.SolverStatus | None, _info):
         return solver_status.toString() if solver_status is not None else None
 
     @field_serializer('score')
-    def serialize_dt(self, score: optapy.score.SimpleScore | None, _info):
+    def serialize_score(self, score: optapy.score.SimpleScore | None, _info):
         return score.toString() if score is not None else None
 
     # class Config:
