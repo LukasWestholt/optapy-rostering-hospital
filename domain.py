@@ -143,8 +143,6 @@ class EmployeeSchedule:
         self.score = score
 
 class EmployeeScheduleModel(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
     schedule_state: ScheduleState
     availability_list: list[AvailabilityModel]
     employee_list: list[EmployeeModel]
@@ -161,6 +159,7 @@ class EmployeeScheduleModel(BaseModel):
         return score.toString() if score is not None else None
 
     class Config:
+        arbitrary_types_allowed = True
         json_encoders = {
             optapy.types.SolverStatus: lambda v: v.toString(),
             optapy.score.SimpleScore:  lambda v: v.toString(),
