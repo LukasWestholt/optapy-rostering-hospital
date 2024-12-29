@@ -154,6 +154,8 @@ class EmployeeScheduleModel(BaseModel):
     @model_validator(mode="before")
     def apply_toString_on_init(cls, data: any) -> any:
         # Call toString() on attr during initialization
+        print(data)
+        print("---")
         if isinstance(data, dict):
             if 'solver_status' in data and isinstance(data['solver_status'], optapy.types.SolverStatus):
                 data["solver_status"] = data['solver_status'].toString()
