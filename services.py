@@ -13,7 +13,7 @@ from constraints import employee_scheduling_constraints
 from domain import Employee, Shift, Availability, AvailabilityType, ScheduleState, EmployeeSchedule
 from helpers import join_all_combinations, pick_subset, pick_random
 
-app = Flask(__name__)
+app = Flask("roastering-hospital")
 api = Api(app, version='1.0', title='Schedule API', description='API for scheduling')
 
 
@@ -210,6 +210,7 @@ last_score = HardSoftScore.ZERO
 def create_model_from_class(api, name, cls):
     # Extract annotations
     annotations = cls.__annotations__
+    print(annotations)
     model_fields = {}
     for field_name, field_type in annotations.items():
         if field_type == str:
