@@ -3,15 +3,13 @@ import optapy.score
 import datetime
 import enum
 
+from pydantic import BaseModel
+
 
 @optapy.problem_fact
-class Employee:
+class Employee(BaseModel):
     name: str
     skill_set: list[str]
-
-    def __init__(self, name: str, skill_set: list[str]):
-        self.name = name
-        self.skill_set = skill_set
 
     def __str__(self):
         return f'Employee(name={self.name})'
@@ -30,16 +28,10 @@ class AvailabilityType(enum.Enum):
 
 
 @optapy.problem_fact
-class Availability:
+class Availability(BaseModel):
     employee: Employee
     date: datetime.date
     availability_type: AvailabilityType
-
-    def __init__(self, employee: Employee, date: datetime.date,
-                 availability_type: AvailabilityType):
-        self.employee = employee
-        self.date = date
-        self.availability_type = availability_type
 
     def __str__(self):
         return f'Availability(employee={self.employee}, date={self.date}, availability_type={self.availability_type})'
@@ -52,18 +44,11 @@ class Availability:
         }
 
 
-class ScheduleState:
+class ScheduleState(BaseModel):
     publish_length: int
     draft_length: int
     first_draft_date: datetime.date
     last_historic_date: datetime.date
-
-    def __init__(self, publish_length: int, draft_length: int, first_draft_date: datetime.date,
-                 last_historic_date: datetime.date):
-        self.publish_length = publish_length
-        self.draft_length = draft_length
-        self.first_draft_date = first_draft_date
-        self.last_historic_date = last_historic_date
 
     def is_draft(self, shift):
         return shift.start >= datetime.datetime.combine(self.first_draft_date, datetime.time.min)
@@ -82,22 +67,13 @@ def shift_pinning_filter(solution, shift):
 
 
 @optapy.planning_entity(pinning_filter=shift_pinning_filter)
-class Shift:
+class Shift(BaseModel):
     id: int
     start: datetime.datetime
     end: datetime.datetime
     location: str
     required_skills: list[str]
     employee: Employee | None
-
-    def __init__(self, shift_id, start: datetime.datetime, end: datetime.datetime,
-                 location: str, required_skills: list[str], employee: Employee | None = None):
-        self.id = shift_id
-        self.start = start
-        self.end = end
-        self.location = location
-        self.required_skills = required_skills
-        self.employee = employee
 
     @optapy.planning_id
     def get_id(self):
@@ -125,21 +101,13 @@ class Shift:
 
 
 @optapy.planning_solution
-class EmployeeSchedule:
+class EmployeeSchedule(BaseModel):
     schedule_state: ScheduleState
     availability_list: list[Availability]
     employee_list: list[Employee]
     shift_list: list[Shift]
     solver_status: optapy.types.SolverStatus | None
     score: optapy.score.SimpleScore | None
-
-    def __init__(self, schedule_state: ScheduleState, availability_list: list[Availability], employee_list: list[Employee], shift_list: list[Shift], solver_status: optapy.types.SolverStatus | None = None, score: optapy.score.SimpleScore | None = None):
-        self.employee_list = employee_list
-        self.availability_list = availability_list
-        self.schedule_state = schedule_state
-        self.shift_list = shift_list
-        self.solver_status = solver_status
-        self.score = score
 
     @optapy.problem_fact_collection_property(Employee)
     @optapy.value_range_provider('employee_range')

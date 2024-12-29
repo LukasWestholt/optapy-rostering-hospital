@@ -132,7 +132,7 @@ def generate_demo_data() -> EmployeeSchedule:
     initial_roster_length_in_days = 14
     start_date = next_weekday(datetime.date.today(), 0)  # next Monday
 
-    schedule_state = ScheduleState(7, initial_roster_length_in_days, start_date, start_date)
+    schedule_state = ScheduleState(publish_length=7, draft_length=initial_roster_length_in_days, first_draft_date=start_date, last_historic_date=start_date)
     random = Random(0)
     name_permutations = join_all_combinations(FIRST_NAMES, LAST_NAMES)
     random.shuffle(name_permutations)
@@ -141,7 +141,7 @@ def generate_demo_data() -> EmployeeSchedule:
     for i in range(EMPLOYEE_COUNT):
         skills = pick_subset(OPTIONAL_SKILLS, random, 1, 3)
         skills.append(pick_random(REQUIRED_SKILLS, random))
-        employee = Employee(name_permutations[i], skills)
+        employee = Employee(name=name_permutations[i], skill_set=skills)
         employee_list.append(employee)
 
     shift_list = []
@@ -151,14 +151,16 @@ def generate_demo_data() -> EmployeeSchedule:
         date = start_date + datetime.timedelta(days=i)
         for employee in employees_with_availabilities_on_day:
             availability_type = pick_random(list(AvailabilityType), random)
-            availability = Availability(employee, date, availability_type)
+            availability = Availability(employee=employee, date=date, availability_type=availability_type)
             availability_list.append(availability)
         shift_list.extend(generate_shifts_for_day(date, random))
     return EmployeeSchedule(
-        schedule_state,
-        availability_list,
-        employee_list,
-        shift_list,
+        schedule_state=schedule_state,
+        availability_list=availability_list,
+        employee_list=employee_list,
+        shift_list=shift_list,
+        solver_status=None,
+        score=None,
     )
 
 def generate_shifts_for_day(date: datetime.date, random: Random):
@@ -178,7 +180,7 @@ def generate_shifts_for_day(date: datetime.date, random: Random):
 def generate_shift_for_timeslot(timeslot_start: datetime.datetime, timeslot_end: datetime.datetime,
                                 location: str, times: int = 1):
     for i in range(times):
-        shift = Shift(next(id_gen), timeslot_start, timeslot_end, location, [location])
+        shift = Shift(id=next(id_gen), start=timeslot_start, end=timeslot_end, location=location, required_skills=[location], employee=None)
         yield shift
 
 
@@ -189,7 +191,7 @@ def generate_draft_shifts():
         date = schedule.schedule_state.first_draft_date + datetime.timedelta(days=(schedule.schedule_state.publish_length + i))
         for employee in employees_with_availabilities_on_day:
             availability_type = pick_random(list(AvailabilityType), random)
-            availability = Availability(employee, date, availability_type)
+            availability = Availability(employee=employee, date=date, availability_type=availability_type)
             schedule.availability_list.append(availability)
         schedule.shift_list.extend(generate_shifts_for_day(date, random))
 
