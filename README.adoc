@@ -42,6 +42,13 @@ $ . venv/bin/activate
 $ pip install -r requirements.txt
 ----
 
+[source, shell]
+----
+$ cd typescript-frontend
+$ npm install
+$ npx tsc
+----
+
 . Run the application
 +
 [source, shell]

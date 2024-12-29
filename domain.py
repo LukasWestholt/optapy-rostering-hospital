@@ -3,7 +3,7 @@ import optapy.score
 import datetime
 import enum
 
-from pydantic import BaseModel, field_serializer, ConfigDict
+from pydantic import BaseModel, field_serializer, ConfigDict, model_validator
 
 
 @optapy.problem_fact
