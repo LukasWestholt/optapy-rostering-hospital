@@ -1,15 +1,17 @@
 from collections.abc import Iterator
 
-from domain import Employee, Shift, Availability, AvailabilityType, ScheduleState, EmployeeSchedule
 import datetime
 from random import Random
 from optapy import solver_manager_create, score_manager_create
 import optapy.config
 from optapy.types import Duration, SolverStatus
 from optapy.score import HardSoftScore
-from constraints import employee_scheduling_constraints
 from flask import Flask
 from flask_restx import Api, Resource, fields
+
+from constraints import employee_scheduling_constraints
+from domain import Employee, Shift, Availability, AvailabilityType, ScheduleState, EmployeeSchedule
+from helpers import join_all_combinations
 
 app = Flask(__name__)
 api = Api(app, version='1.0', title='Schedule API', description='API for scheduling')
@@ -203,18 +205,6 @@ def pick_subset(source: list, random: Random, *distribution: int):
         return []
     item_count = random.choices(range(len(distribution)), distribution)
     return random.sample(source, item_count[0])
-
-
-def join_all_combinations(*part_arrays: list[str]):
-    if len(part_arrays) == 0:
-        return []
-    if len(part_arrays) == 1:
-        return part_arrays[0]
-    combinations = []
-    for combination in join_all_combinations(*part_arrays[1:]):
-        for item in part_arrays[0]:
-            combinations.append(f'{item} {combination}')
-    return combinations
 
 
 SINGLETON_ID = 1
