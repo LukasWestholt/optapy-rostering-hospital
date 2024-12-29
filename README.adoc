@@ -46,10 +46,10 @@ $ pip install -r requirements.txt
 +
 [source, shell]
 ----
-$ python main.py
+$ uvicorn main:api --reload
 ----
 
-. Visit http://localhost:5000/static/index.html in your browser.
+. Visit http://localhost:8000/static/index.html in your browser.
 
 . Click on the *Solve* button.
 
