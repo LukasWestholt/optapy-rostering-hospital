@@ -179,9 +179,9 @@ class EmployeeScheduleModel(BaseModel):
         arbitrary_types_allowed = True
         json_encoders = {
             optapy.types.SolverStatus: solver_status_to_string,
-            optapy.score.SimpleScore: score_to_string,
+            optapy.score.HardSoftScore: score_to_string,
             optapy.types.SolverStatus | None: solver_status_to_string,
-            optapy.score.SimpleScore | None:  score_to_string,
+            optapy.score.HardSoftScore | None: score_to_string,
         }
 
     # @classmethod
