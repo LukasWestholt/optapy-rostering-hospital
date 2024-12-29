@@ -16,7 +16,7 @@ from domain import Employee, Shift, Availability, AvailabilityType, ScheduleStat
 
 from helpers import join_all_combinations, pick_subset, pick_random
 
-api = FastAPI(title="Schedule API", version="1.0", description="API for scheduling", openapi_tags=[{"name": "Schedule"}])
+api = FastAPI(title="Schedule API", version="1.0", description="API for scheduling")
 api.mount("/static", StaticFiles(directory="static"), name="static")
 
 def next_weekday(d, weekday):
@@ -213,7 +213,7 @@ last_score = HardSoftScore.ZERO
 
 schedule: EmployeeSchedule = generate_demo_data()
 
-@api.get('/schedule', response_model=EmployeeScheduleModel)
+@api.get('/schedule', response_model=EmployeeScheduleModel, tags=['Schedule'])
 def get_schedule():
     schedule.solver_status = get_solver_status()
     schedule.score = score_manager.updateScore(schedule)
@@ -229,11 +229,11 @@ def error_handler(problem_id, exception):
     exception.printStackTrace()
 
 
-@api.post('/solve')
+@api.post('/solve', tags=['Schedule'])
 def solve():
     solver_manager.solveAndListen(SINGLETON_ID, find_by_id, save, error_handler)
 
-@api.post('/publish')
+@api.post('/publish', tags=['Schedule'])
 def publish():
     if get_solver_status() != SolverStatus.NOT_SOLVING:
         raise RuntimeError('Cannot publish a schedule while solving in progress.')
@@ -246,7 +246,7 @@ def publish():
 
     generate_draft_shifts()
 
-@api.post('/stopSolving')
+@api.post('/stopSolving', tags=['Schedule'])
 def stop_solving():
     solver_manager.terminateEarly(SINGLETON_ID)
 
