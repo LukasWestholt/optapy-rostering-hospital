@@ -147,11 +147,13 @@ class EmployeeScheduleModel(BaseModel):
     availability_list: list[AvailabilityModel]
     employee_list: list[EmployeeModel]
     shift_list: list[ShiftModel]
-    solver_status: optapy.types.SolverStatus | None
-    score: optapy.score.SimpleScore | None
+    solver_status: str | None
+    score: str | None
 
     def model_dump(self, **kwargs) -> dict:
         data = super().model_dump(**kwargs)
-        data["solver_status"] = self.solver_status.toString()
-        data["score"] = self.score.toString()
+        if 'solver_status' in data and isinstance(data['solver_status'], optapy.types.SolverStatus):
+            data["solver_status"] = self['solver_status'].toString()
+        if 'score' in data and isinstance(data['score'], optapy.score.SimpleScore):
+            data["score"] = data['score'].toString()
         return data
