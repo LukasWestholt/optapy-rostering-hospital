@@ -152,7 +152,6 @@ class EmployeeScheduleModel(BaseModel):
     solver_status: optapy.types.SolverStatus | None
     score: optapy.score.HardSoftScore | None
 
-
     @field_serializer('solver_status')
     def serialize_solver_status(self, solver_status: optapy.types.SolverStatus | None, _info):
         return solver_status.toString() if solver_status is not None else None
@@ -161,23 +160,23 @@ class EmployeeScheduleModel(BaseModel):
     def serialize_score(self, score: optapy.score.HardSoftScore | None, _info):
         return score.toString() if score is not None else None
 
-    # class Config:
-    #     json_encoders = {
-    #         optapy.types.SolverStatus: lambda v: v.toString(),
-    #         optapy.score.SimpleScore:  lambda v: v.toString(),
-    #         optapy.types.SolverStatus | None: lambda v: v.toString() if v is not None else None,
-    #         optapy.score.SimpleScore | None:  lambda v: v.toString() if v is not None else None,
-    #     }
-    #
-    # @classmethod
-    # @model_validator(mode="before")
-    # def apply_toString_on_init(cls, data: any) -> any:
-    #     # Call toString() on attr during initialization
-    #     print(data)
-    #     print("---")
-    #     if isinstance(data, dict):
-    #         if 'solver_status' in data and isinstance(data['solver_status'], optapy.types.SolverStatus):
-    #             data["solver_status"] = data['solver_status'].toString()
-    #         if 'score' in data and isinstance(data['score'], optapy.score.SimpleScore):
-    #             data["score"] = data['score'].toString()
-    #     return data
+    class Config:
+        json_encoders = {
+            optapy.types.SolverStatus: lambda v: v.toString(),
+            optapy.score.SimpleScore:  lambda v: v.toString(),
+            optapy.types.SolverStatus | None: lambda v: v.toString() if v is not None else None,
+            optapy.score.SimpleScore | None:  lambda v: v.toString() if v is not None else None,
+        }
+
+    @classmethod
+    @model_validator(mode="before")
+    def apply_toString_on_init(cls, data: any) -> any:
+        # Call toString() on attr during initialization
+        print(data)
+        print("---")
+        if isinstance(data, dict):
+            if 'solver_status' in data and isinstance(data['solver_status'], optapy.types.SolverStatus):
+                data["solver_status"] = data['solver_status'].toString()
+            if 'score' in data and isinstance(data['score'], optapy.score.SimpleScore):
+                data["score"] = data['score'].toString()
+        return data
