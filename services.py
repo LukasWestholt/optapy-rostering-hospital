@@ -253,7 +253,7 @@ employee_schedule_model = create_model_from_class(api, 'EmployeeSchedule', Emplo
 
 @api.route('/schedule')
 class ScheduleService(Resource):
-    @api.response(200, 'OK')
+    #@api.response(200, 'OK')
     @api.marshal_with(employee_schedule_model)
     def get(self):
         global schedule
