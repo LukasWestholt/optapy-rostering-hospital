@@ -182,7 +182,7 @@ def generate_shifts_for_day(date: datetime.date, random: Random):
 def generate_shift_for_timeslot(timeslot_start: datetime.datetime, timeslot_end: datetime.datetime,
                                 location: str, times: int = 1):
     for i in range(times):
-        shift = Shift(id=next(id_gen), start=timeslot_start, end=timeslot_end, location=location, required_skills=[location], employee=None)
+        shift = Shift(shift_id=next(id_gen), start=timeslot_start, end=timeslot_end, location=location, required_skills=[location], employee=None)
         yield shift
 
 
