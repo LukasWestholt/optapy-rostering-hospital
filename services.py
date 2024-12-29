@@ -161,8 +161,6 @@ def generate_demo_data() -> EmployeeSchedule:
         shift_list,
     )
 
-schedule: EmployeeSchedule = generate_demo_data()
-
 def generate_shifts_for_day(date: datetime.date, random: Random):
     out = []
     for location, shift_times_list in SHIFT.items():
@@ -223,6 +221,8 @@ def create_model_from_class(api, name, cls):
             # Add more type mappings as needed
             #model_fields[field_name] = fields.Raw
     return api.model(name, model_fields)
+
+schedule: EmployeeSchedule = generate_demo_data()
 
 employee_schedule_model = create_model_from_class(api, 'EmployeeSchedule', EmployeeSchedule)
 
