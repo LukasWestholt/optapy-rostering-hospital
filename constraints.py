@@ -53,7 +53,7 @@ def no_overlapping_shifts(constraint_factory: ConstraintFactory) -> Constraint:
 
 
 def at_least_10_hours_between_two_shifts(constraint_factory: ConstraintFactory) -> Constraint:
-    TEN_HOURS_IN_SECONDS = 60 * 60 * 10
+    ten_hours_in_seconds = 60 * 60 * 10
     return constraint_factory \
         .for_each_unique_pair(Shift,
                               Joiners.equal(lambda shift: shift.employee),
@@ -61,10 +61,10 @@ def at_least_10_hours_between_two_shifts(constraint_factory: ConstraintFactory) 
                                                          lambda shift: shift.start)
                               ) \
         .filter(lambda first_shift, second_shift:
-                (second_shift.start - first_shift.end).total_seconds() < TEN_HOURS_IN_SECONDS) \
+                (second_shift.start - first_shift.end).total_seconds() < ten_hours_in_seconds) \
         .penalize("At least 10 hours between 2 shifts", HardSoftScore.ONE_HARD,
                   lambda first_shift, second_shift:
-                  (TEN_HOURS_IN_SECONDS - (second_shift.start - first_shift.end).total_seconds()) // 60)
+                  (ten_hours_in_seconds - (second_shift.start - first_shift.end).total_seconds()) // 60)
 
 
 def one_shift_per_day(constraint_factory: ConstraintFactory) -> Constraint:

@@ -79,8 +79,8 @@ def test_one_shift_per_day():
     constraint_verifier.verify_that(no_overlapping_shifts) \
         .given(employee1,
                Shift(1, DAY_START_TIME, DAY_END_TIME, "Location", ["Skill"], employee1),
-               Shift(2, DAY_START_TIME + timedelta(days=1), DAY_END_TIME + timedelta(days=1),
-                     "Location 2", ["Skill"], employee1)) \
+               Shift(2, DAY_START_TIME + timedelta(days=1), DAY_END_TIME + timedelta(days=1), "Location 2", ["Skill"],
+                     employee1)) \
         .penalizes(0)
 
 
@@ -102,8 +102,8 @@ def test_at_least_10_hours_between_consecutive_shifts():
     constraint_verifier.verify_that(at_least_10_hours_between_two_shifts) \
         .given(employee1,
                Shift(1, DAY_START_TIME, DAY_END_TIME, "Location", ["Skill"], employee1),
-               Shift(2, DAY_END_TIME + timedelta(hours=10), DAY_START_TIME + timedelta(days=1), "Location 2",
-                     ["Skill"], employee1)) \
+               Shift(2, DAY_END_TIME + timedelta(hours=10), DAY_START_TIME + timedelta(days=1), "Location 2", ["Skill"],
+                     employee1)) \
         .penalizes(0)
 
     constraint_verifier.verify_that(at_least_10_hours_between_two_shifts) \
@@ -115,8 +115,8 @@ def test_at_least_10_hours_between_consecutive_shifts():
     constraint_verifier.verify_that(at_least_10_hours_between_two_shifts) \
         .given(employee1,
                Shift(1, DAY_START_TIME, DAY_END_TIME, "Location", ["Skill"], employee1),
-               Shift(2, DAY_START_TIME + timedelta(days=1), DAY_END_TIME + timedelta(days=1),
-                     "Location 2", ["Skill"], employee1)) \
+               Shift(2, DAY_START_TIME + timedelta(days=1), DAY_END_TIME + timedelta(days=1), "Location 2", ["Skill"],
+                     employee1)) \
         .penalizes(0)
 
 
@@ -134,8 +134,8 @@ def test_unavailable_employee():
     constraint_verifier.verify_that(unavailable_employee) \
         .given(employee1,
                unavailability,
-               Shift(1, DAY_START_TIME + timedelta(days=1), DAY_END_TIME + timedelta(days=1),
-                     "Location", ["Skill"], employee1)) \
+               Shift(1, DAY_START_TIME + timedelta(days=1), DAY_END_TIME + timedelta(days=1), "Location", ["Skill"],
+                     employee1)) \
         .penalizes(0)
 
     constraint_verifier.verify_that(unavailable_employee) \
@@ -165,8 +165,8 @@ def test_desired_day_for_employee():
     constraint_verifier.verify_that(desired_day_for_employee) \
         .given(employee1,
                desired,
-               Shift(1, DAY_START_TIME + timedelta(days=1), DAY_END_TIME + timedelta(days=1),
-                     "Location", ["Skill"], employee1)) \
+               Shift(1, DAY_START_TIME + timedelta(days=1), DAY_END_TIME + timedelta(days=1), "Location", ["Skill"],
+                     employee1)) \
         .rewards(0)
 
     constraint_verifier.verify_that(desired_day_for_employee) \
@@ -196,8 +196,8 @@ def test_undesired_day_for_employee():
     constraint_verifier.verify_that(undesired_day_for_employee) \
         .given(employee1,
                undesired,
-               Shift(1, DAY_START_TIME + timedelta(days=1), DAY_END_TIME + timedelta(days=1),
-                     "Location", ["Skill"], employee1)) \
+               Shift(1, DAY_START_TIME + timedelta(days=1), DAY_END_TIME + timedelta(days=1), "Location", ["Skill"],
+                     employee1)) \
         .penalizes(0)
 
     constraint_verifier.verify_that(undesired_day_for_employee) \

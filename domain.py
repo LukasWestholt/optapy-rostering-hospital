@@ -9,7 +9,7 @@ class Employee:
     name: str
     skill_set: list[str]
 
-    def __init__(self, name: str = None, skill_set: list[str] = None):
+    def __init__(self, name: str, skill_set: list[str]):
         self.name = name
         self.skill_set = skill_set
 
@@ -28,10 +28,6 @@ class AvailabilityType(enum.Enum):
     UNDESIRED = 'UNDESIRED'
     UNAVAILABLE = 'UNAVAILABLE'
 
-    @staticmethod
-    def list():
-        return list(map(lambda at: at, AvailabilityType))
-
 
 @optapy.problem_fact
 class Availability:
@@ -39,8 +35,8 @@ class Availability:
     date: datetime.date
     availability_type: AvailabilityType
 
-    def __init__(self, employee: Employee = None, date: datetime.date = None,
-                 availability_type: AvailabilityType = None):
+    def __init__(self, employee: Employee, date: datetime.date,
+                 availability_type: AvailabilityType):
         self.employee = employee
         self.date = date
         self.availability_type = availability_type
@@ -62,8 +58,8 @@ class ScheduleState:
     first_draft_date: datetime.date
     last_historic_date: datetime.date
 
-    def __init__(self, publish_length: int = None, draft_length: int = None, first_draft_date: datetime.date = None,
-                 last_historic_date: datetime.date = None):
+    def __init__(self, publish_length: int, draft_length: int, first_draft_date: datetime.date,
+                 last_historic_date: datetime.date):
         self.publish_length = publish_length
         self.draft_length = draft_length
         self.first_draft_date = first_draft_date
@@ -94,9 +90,9 @@ class Shift:
     required_skills: list[str]
     employee: Employee | None
 
-    def __init__(self, id: int = None, start: datetime.datetime = None, end: datetime.datetime = None,
-                 location: str = None, required_skills: list[str] = None, employee: Employee | None = None):
-        self.id = id
+    def __init__(self, shift_id, start: datetime.datetime, end: datetime.datetime,
+                 location: str, required_skills: list[str], employee: Employee | None = None):
+        self.id = shift_id
         self.start = start
         self.end = end
         self.location = location
@@ -134,10 +130,10 @@ class EmployeeSchedule:
     availability_list: list[Availability]
     employee_list: list[Employee]
     shift_list: list[Shift]
-    solver_status: optapy.types.SolverStatus
-    score: optapy.score.SimpleScore
+    solver_status: optapy.types.SolverStatus | None
+    score: optapy.score.SimpleScore | None
 
-    def __init__(self, schedule_state, availability_list, employee_list, shift_list, solver_status, score=None):
+    def __init__(self, schedule_state: ScheduleState, availability_list: list[Availability], employee_list: list[Employee], shift_list: list[Shift], solver_status: optapy.types.SolverStatus | None = None, score: optapy.score.SimpleScore | None = None):
         self.employee_list = employee_list
         self.availability_list = availability_list
         self.schedule_state = schedule_state

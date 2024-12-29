@@ -1,3 +1,5 @@
+from collections.abc import Iterator
+
 from domain import Employee, Shift, Availability, AvailabilityType, ScheduleState, EmployeeSchedule
 import datetime
 from random import Random
@@ -6,7 +8,6 @@ import optapy.config
 from optapy.types import Duration, SolverStatus
 from optapy.score import HardSoftScore
 from constraints import employee_scheduling_constraints
-from typing import Optional
 from flask import Flask
 from flask_restx import Api, Resource, fields
 
@@ -116,21 +117,23 @@ SHIFT = {
     ]
 }
 
-id_generator = 0
-schedule: Optional[EmployeeSchedule] = None
+def id_generator(start=0) -> Iterator[int]:
+    """A generator to produce an incremental sequence of IDs starting from `start`."""
+    current = start
+    while True:
+        yield current
+        current += 1
+id_gen = id_generator()
+
+schedule: EmployeeSchedule | None = None
 
 
 def generate_demo_data():
     global schedule
-    INITIAL_ROSTER_LENGTH_IN_DAYS = 14
-    START_DATE = next_weekday(datetime.date.today(), 0)  # next Monday
+    initial_roster_length_in_days = 14
+    start_date = next_weekday(datetime.date.today(), 0)  # next Monday
 
-    schedule_state = ScheduleState()
-    schedule_state.first_draft_date = START_DATE
-    schedule_state.draft_length = INITIAL_ROSTER_LENGTH_IN_DAYS
-    schedule_state.publish_length = 7
-    schedule_state.last_historic_date = START_DATE
-
+    schedule_state = ScheduleState(7, initial_roster_length_in_days, start_date, start_date)
     random = Random(0)
     name_permutations = join_all_combinations(FIRST_NAMES, LAST_NAMES)
     random.shuffle(name_permutations)
@@ -139,22 +142,17 @@ def generate_demo_data():
     for i in range(EMPLOYEE_COUNT):
         skills = pick_subset(OPTIONAL_SKILLS, random, 1, 3)
         skills.append(pick_random(REQUIRED_SKILLS, random))
-        employee = Employee()
-        employee.name = name_permutations[i]
-        employee.skill_set = skills
+        employee = Employee(name_permutations[i], skills)
         employee_list.append(employee)
 
     shift_list = []
     availability_list = []
-    for i in range(INITIAL_ROSTER_LENGTH_IN_DAYS):
+    for i in range(initial_roster_length_in_days):
         employees_with_availabilities_on_day = pick_subset(employee_list, random, 4, 3, 2, 1)
-        date = START_DATE + datetime.timedelta(days=i)
+        date = start_date + datetime.timedelta(days=i)
         for employee in employees_with_availabilities_on_day:
-            availability_type = pick_random(AvailabilityType.list(), random)
-            availability = Availability()
-            availability.date = date
-            availability.employee = employee
-            availability.availability_type = availability_type
+            availability_type = pick_random(list(AvailabilityType), random)
+            availability = Availability(employee, date, availability_type)
             availability_list.append(availability)
         shift_list.extend(generate_shifts_for_day(date, random))
     schedule = EmployeeSchedule(
@@ -162,7 +160,6 @@ def generate_demo_data():
         availability_list,
         employee_list,
         shift_list,
-        None
     )
 
 
@@ -182,16 +179,9 @@ def generate_shifts_for_day(date: datetime.date, random: Random):
 
 def generate_shift_for_timeslot(timeslot_start: datetime.datetime, timeslot_end: datetime.datetime,
                                 location: str, times: int = 1):
-    global id_generator
+    global id_gen
     for i in range(times):
-        shift = Shift()
-        shift.id = id_generator
-        shift.start = timeslot_start
-        shift.end = timeslot_end
-        shift.required_skills = [location]
-        shift.location = location
-        shift.employee = None
-        id_generator += 1
+        shift = Shift(next(id_gen), timeslot_start, timeslot_end, location, [location])
         yield shift
 
 
@@ -202,11 +192,8 @@ def generate_draft_shifts():
         employees_with_availabilities_on_day = pick_subset(schedule.employee_list, random, 4, 3, 2, 1)
         date = schedule.schedule_state.first_draft_date + datetime.timedelta(days=(schedule.schedule_state.publish_length + i))
         for employee in employees_with_availabilities_on_day:
-            availability_type = pick_random(AvailabilityType.list(), random)
-            availability = Availability()
-            availability.date = date
-            availability.employee = employee
-            availability.availability_type = availability_type
+            availability_type = pick_random(list(AvailabilityType), random)
+            availability = Availability(employee, date, availability_type)
             schedule.availability_list.append(availability)
         schedule.shift_list.extend(generate_shifts_for_day(date, random))
 
@@ -259,7 +246,7 @@ def create_model_from_class(api, name, cls):
         else:
             raise NotImplementedError((field_name, field_type))
             # Add more type mappings as needed
-            model_fields[field_name] = fields.Raw
+            #model_fields[field_name] = fields.Raw
     return api.model(name, model_fields)
 
 employee_schedule_model = create_model_from_class(api, 'EmployeeSchedule', EmployeeSchedule)
