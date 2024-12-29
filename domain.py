@@ -145,17 +145,19 @@ class EmployeeSchedule:
     def set_score(self, score):
         self.score = score
 
-def string_to_solver_status(string_or_solver_status: str | optapy.types.SolverStatus) -> optapy.types.SolverStatus:
+def string_to_solver_status(string_or_solver_status: str | optapy.types.SolverStatus) -> optapy.types.SolverStatus | None:
+    if isinstance(string_or_solver_status, optapy.types.SolverStatus):
+        return string_or_solver_status
     return None
 
-def solver_status_to_string(solver_status: optapy.types.SolverStatus) -> str:
-    return solver_status.toString()
+def solver_status_to_string(solver_status: optapy.types.SolverStatus) -> str | None:
+    return solver_status.toString() if solver_status is not None else None
 
-def score_to_string(score: optapy.score.HardSoftScore) -> str:
-    return score.toString()
+def score_to_string(score: optapy.score.HardSoftScore) -> str | None:
+    return score.toString() if score is not None else None
 
-PossiblySerializedSolverStatus = Annotated[optapy.types.SolverStatus, BeforeValidator(string_to_solver_status), PlainSerializer(solver_status_to_string, return_type=str), WithJsonSchema({'type': 'string'}, mode='serialization'), WithJsonSchema({'type': 'string'}, mode='validation')]
-PossiblySerializedHardSoftScore = Annotated[optapy.score.HardSoftScore, BeforeValidator(string_to_solver_status), PlainSerializer(score_to_string, return_type=str), WithJsonSchema({'type': 'string'}, mode='serialization'), WithJsonSchema({'type': 'string'}, mode='validation')]
+PossiblySerializedSolverStatus = Annotated[optapy.types.SolverStatus, BeforeValidator(string_to_solver_status), PlainSerializer(solver_status_to_string, return_type=str | None), WithJsonSchema({'type': 'string'}, mode='serialization'), WithJsonSchema({'type': 'string'}, mode='validation')]
+PossiblySerializedHardSoftScore = Annotated[optapy.score.HardSoftScore, BeforeValidator(string_to_solver_status), PlainSerializer(score_to_string, return_type=str | None), WithJsonSchema({'type': 'string'}, mode='serialization'), WithJsonSchema({'type': 'string'}, mode='validation')]
 
 class EmployeeScheduleModel(BaseModel):
     schedule_state: ScheduleState
@@ -176,10 +178,10 @@ class EmployeeScheduleModel(BaseModel):
     class Config:
         arbitrary_types_allowed = True
         json_encoders = {
-            optapy.types.SolverStatus: lambda v: v.toString(),
-            optapy.score.SimpleScore:  lambda v: v.toString(),
-            optapy.types.SolverStatus | None: lambda v: v.toString() if v is not None else None,
-            optapy.score.SimpleScore | None:  lambda v: v.toString() if v is not None else None,
+            optapy.types.SolverStatus: solver_status_to_string,
+            optapy.score.SimpleScore: score_to_string,
+            optapy.types.SolverStatus | None: solver_status_to_string,
+            optapy.score.SimpleScore | None:  score_to_string,
         }
 
     # @classmethod
