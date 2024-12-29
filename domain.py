@@ -86,7 +86,7 @@ def shift_pinning_filter(solution, shift):
 
 @optapy.planning_entity(pinning_filter=shift_pinning_filter)
 class Shift:
-    id: int
+    shift_id: int
     start: datetime.datetime
     end: datetime.datetime
     location: str
@@ -95,7 +95,7 @@ class Shift:
 
     def __init__(self, shift_id, start: datetime.datetime, end: datetime.datetime,
                  location: str, required_skills: list[str], employee: Employee | None = None):
-        self.id = shift_id
+        self.shift_id = shift_id
         self.start = start
         self.end = end
         self.location = location
@@ -105,7 +105,7 @@ class Shift:
 
     @optapy.planning_id
     def get_id(self):
-        return self.id
+        return self.shift_id
 
     @optapy.planning_variable(Employee, value_range_provider_refs=['employee_range'])
     def get_employee(self):
@@ -115,7 +115,7 @@ class Shift:
         self.employee = employee
 
     def __str__(self):
-        return f'Shift(id={self.id}, start={self.start}, end={self.end}, location={self.location}, ' \
+        return f'Shift(shift_id={self.shift_id}, start={self.start}, end={self.end}, location={self.location}, ' \
                f'required_skills={self.required_skills}, employee={self.employee})'
 
     def to_dict(self):
@@ -128,7 +128,7 @@ class Shift:
         }
 
 class ShiftModel(BaseModel):
-    id: int
+    shift_id: int
     start: datetime.datetime
     end: datetime.datetime
     location: str
