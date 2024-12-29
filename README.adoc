@@ -42,18 +42,23 @@ $ . venv/bin/activate
 $ pip install -r requirements.txt
 ----
 
-[source, shell]
-----
-$ cd typescript-frontend
-$ npm install
-$ npx tsc
-----
-
 . Run the application
 +
 [source, shell]
 ----
 $ uvicorn main:api --reload
+----
+
+
+[source, shell]
+----
+$ cd typescript-frontend
+$ npm install
+$ npx tsc
+
+# install the latest version of "openapi-generator-cli"
+$ npm install @openapitools/openapi-generator-cli -g
+$ openapi-generator-cli generate -i http://localhost:8000/openapi.json -g typescript-fetch -o api
 ----
 
 . Visit http://localhost:8000/static/index.html in your browser.

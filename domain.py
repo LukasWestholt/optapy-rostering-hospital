@@ -5,7 +5,7 @@ import optapy.score
 import datetime
 import enum
 
-from pydantic import BaseModel, field_serializer, ConfigDict, model_validator, BeforeValidator, PlainSerializer, \
+from pydantic import BaseModel, field_serializer, BeforeValidator, PlainSerializer, \
     WithJsonSchema
 
 
@@ -177,22 +177,10 @@ class EmployeeScheduleModel(BaseModel):
 
     class Config:
         arbitrary_types_allowed = True
+        # TODO Delete half of items here:
         json_encoders = {
             optapy.types.SolverStatus: solver_status_to_string,
             optapy.score.HardSoftScore: score_to_string,
             optapy.types.SolverStatus | None: solver_status_to_string,
             optapy.score.HardSoftScore | None: score_to_string,
         }
-
-    # @classmethod
-    # @model_validator(mode="before")
-    # def apply_toString_on_init(cls, data: any) -> any:
-    #     # Call toString() on attr during initialization
-    #     print(data)
-    #     print("---")
-    #     if isinstance(data, dict):
-    #         if 'solver_status' in data and isinstance(data['solver_status'], optapy.types.SolverStatus):
-    #             data["solver_status"] = data['solver_status'].toString()
-    #         if 'score' in data and isinstance(data['score'], optapy.score.SimpleScore):
-    #             data["score"] = data['score'].toString()
-    #     return data

@@ -16,7 +16,7 @@ from domain import Employee, Shift, Availability, AvailabilityType, ScheduleStat
 
 from helpers import join_all_combinations, pick_subset, pick_random
 
-api = FastAPI(title="Schedule API", version="1.0", description="API for scheduling")
+api = FastAPI(title="Schedule API", version="1.0", description="API for scheduling", openapi_tags=[{"name": "Schedule"}])
 api.mount("/static", StaticFiles(directory="static"), name="static")
 
 def next_weekday(d, weekday):
