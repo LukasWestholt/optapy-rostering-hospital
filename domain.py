@@ -3,7 +3,7 @@ import optapy.score
 import datetime
 import enum
 
-from pydantic import BaseModel, model_validator, field_serializer, ConfigDict
+from pydantic import BaseModel, field_serializer, ConfigDict
 
 
 @optapy.problem_fact
@@ -150,7 +150,7 @@ class EmployeeScheduleModel(BaseModel):
     employee_list: list[EmployeeModel]
     shift_list: list[ShiftModel]
     solver_status: optapy.types.SolverStatus | None
-    score: optapy.score.SimpleScore | None
+    score: optapy.score.HardSoftScore | None
 
 
     @field_serializer('solver_status')
@@ -158,7 +158,7 @@ class EmployeeScheduleModel(BaseModel):
         return solver_status.toString() if solver_status is not None else None
 
     @field_serializer('score')
-    def serialize_score(self, score: optapy.score.SimpleScore | None, _info):
+    def serialize_score(self, score: optapy.score.HardSoftScore | None, _info):
         return score.toString() if score is not None else None
 
     # class Config:
