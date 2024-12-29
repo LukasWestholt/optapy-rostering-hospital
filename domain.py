@@ -1,9 +1,12 @@
+from typing import Annotated
+
 import optapy.types
 import optapy.score
 import datetime
 import enum
 
-from pydantic import BaseModel, field_serializer, ConfigDict, model_validator
+from pydantic import BaseModel, field_serializer, ConfigDict, model_validator, BeforeValidator, PlainSerializer, \
+    WithJsonSchema
 
 
 @optapy.problem_fact
@@ -142,13 +145,25 @@ class EmployeeSchedule:
     def set_score(self, score):
         self.score = score
 
+def string_to_solver_status(string_or_solver_status: str | optapy.types.SolverStatus) -> optapy.types.SolverStatus:
+    return None
+
+def solver_status_to_string(solver_status: optapy.types.SolverStatus) -> str:
+    return solver_status.toString()
+
+def score_to_string(score: optapy.score.HardSoftScore) -> str:
+    return score.toString()
+
+PossiblySerializedSolverStatus = Annotated[optapy.types.SolverStatus, BeforeValidator(string_to_solver_status), PlainSerializer(solver_status_to_string, return_type=str), WithJsonSchema({'type': 'string'}, mode='serialization'), WithJsonSchema({'type': 'string'}, mode='validation')]
+PossiblySerializedHardSoftScore = Annotated[optapy.score.HardSoftScore, BeforeValidator(string_to_solver_status), PlainSerializer(score_to_string, return_type=str), WithJsonSchema({'type': 'string'}, mode='serialization'), WithJsonSchema({'type': 'string'}, mode='validation')]
+
 class EmployeeScheduleModel(BaseModel):
     schedule_state: ScheduleState
     availability_list: list[AvailabilityModel]
     employee_list: list[EmployeeModel]
     shift_list: list[ShiftModel]
-    solver_status: optapy.types.SolverStatus | None
-    score: optapy.score.HardSoftScore | None
+    solver_status: PossiblySerializedSolverStatus | None
+    score: PossiblySerializedHardSoftScore | None
 
     @field_serializer('solver_status')
     def serialize_solver_status(self, solver_status: optapy.types.SolverStatus | None, _info):
@@ -167,15 +182,15 @@ class EmployeeScheduleModel(BaseModel):
             optapy.score.SimpleScore | None:  lambda v: v.toString() if v is not None else None,
         }
 
-    @classmethod
-    @model_validator(mode="before")
-    def apply_toString_on_init(cls, data: any) -> any:
-        # Call toString() on attr during initialization
-        print(data)
-        print("---")
-        if isinstance(data, dict):
-            if 'solver_status' in data and isinstance(data['solver_status'], optapy.types.SolverStatus):
-                data["solver_status"] = data['solver_status'].toString()
-            if 'score' in data and isinstance(data['score'], optapy.score.SimpleScore):
-                data["score"] = data['score'].toString()
-        return data
+    # @classmethod
+    # @model_validator(mode="before")
+    # def apply_toString_on_init(cls, data: any) -> any:
+    #     # Call toString() on attr during initialization
+    #     print(data)
+    #     print("---")
+    #     if isinstance(data, dict):
+    #         if 'solver_status' in data and isinstance(data['solver_status'], optapy.types.SolverStatus):
+    #             data["solver_status"] = data['solver_status'].toString()
+    #         if 'score' in data and isinstance(data['score'], optapy.score.SimpleScore):
+    #             data["score"] = data['score'].toString()
+    #     return data
