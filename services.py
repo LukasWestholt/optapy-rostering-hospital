@@ -2,6 +2,8 @@ from collections.abc import Iterator
 
 import datetime
 from random import Random
+from typing import get_type_hints
+
 from optapy import solver_manager_create, score_manager_create
 import optapy.config
 from optapy.types import Duration, SolverStatus
@@ -209,7 +211,7 @@ last_score = HardSoftScore.ZERO
 
 def create_model_from_class(api, name, cls):
     # Extract annotations
-    annotations = cls.__annotations__
+    annotations = get_type_hints(cls)
     print(annotations)
     model_fields = {}
     for field_name, field_type in annotations.items():
