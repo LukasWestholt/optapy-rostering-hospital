@@ -3,7 +3,7 @@ import optapy.score
 import datetime
 import enum
 
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
 
 
 @optapy.problem_fact
@@ -150,10 +150,13 @@ class EmployeeScheduleModel(BaseModel):
     solver_status: str | None
     score: str | None
 
-    def model_dump(self, **kwargs) -> dict:
-        data = super().model_dump(**kwargs)
-        if 'solver_status' in data and isinstance(data['solver_status'], optapy.types.SolverStatus):
-            data["solver_status"] = self['solver_status'].toString()
-        if 'score' in data and isinstance(data['score'], optapy.score.SimpleScore):
-            data["score"] = data['score'].toString()
+    @classmethod
+    @model_validator(mode="before")
+    def apply_toString_on_init(cls, data: any) -> any:
+        # Call toString() on attr during initialization
+        if isinstance(data, dict):
+            if 'solver_status' in data and isinstance(data['solver_status'], optapy.types.SolverStatus):
+                data["solver_status"] = data['solver_status'].toString()
+            if 'score' in data and isinstance(data['score'], optapy.score.SimpleScore):
+                data["score"] = data['score'].toString()
         return data
