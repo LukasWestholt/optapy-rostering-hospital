@@ -150,22 +150,22 @@ def string_to_solver_status(string_or_solver_status: str | optapy.types.SolverSt
         return string_or_solver_status
     return None
 
-def solver_status_to_string(solver_status: optapy.types.SolverStatus) -> str | None:
+def solver_status_to_string(solver_status: optapy.types.SolverStatus | None) -> str | None:
     return solver_status.toString() if solver_status is not None else None
 
-def score_to_string(score: optapy.score.HardSoftScore) -> str | None:
+def score_to_string(score: optapy.score.HardSoftScore | None) -> str | None:
     return score.toString() if score is not None else None
 
-PossiblySerializedSolverStatus = Annotated[optapy.types.SolverStatus, BeforeValidator(string_to_solver_status), PlainSerializer(solver_status_to_string, return_type=str | None), WithJsonSchema({'type': 'string'}, mode='serialization'), WithJsonSchema({'type': 'string'}, mode='validation')]
-PossiblySerializedHardSoftScore = Annotated[optapy.score.HardSoftScore, BeforeValidator(string_to_solver_status), PlainSerializer(score_to_string, return_type=str | None), WithJsonSchema({'type': 'string'}, mode='serialization'), WithJsonSchema({'type': 'string'}, mode='validation')]
+PossiblySerializedSolverStatus = Annotated[optapy.types.SolverStatus | None, BeforeValidator(string_to_solver_status), PlainSerializer(solver_status_to_string, return_type=str | None), WithJsonSchema({'type': 'string'}, mode='serialization'), WithJsonSchema({'type': 'string'}, mode='validation')]
+PossiblySerializedHardSoftScore = Annotated[optapy.score.HardSoftScore | None, BeforeValidator(string_to_solver_status), PlainSerializer(score_to_string, return_type=str | None), WithJsonSchema({'type': 'string'}, mode='serialization'), WithJsonSchema({'type': 'string'}, mode='validation')]
 
 class EmployeeScheduleModel(BaseModel):
     schedule_state: ScheduleState
     availability_list: list[AvailabilityModel]
     employee_list: list[EmployeeModel]
     shift_list: list[ShiftModel]
-    solver_status: PossiblySerializedSolverStatus | None
-    score: PossiblySerializedHardSoftScore | None
+    solver_status: PossiblySerializedSolverStatus
+    score: PossiblySerializedHardSoftScore
 
     @field_serializer('solver_status')
     def serialize_solver_status(self, solver_status: optapy.types.SolverStatus | None, _info):
