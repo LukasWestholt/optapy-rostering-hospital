@@ -48,7 +48,7 @@ class Availability:
         }
 
 class AvailabilityModel(BaseModel):
-    employee: Employee
+    employee: EmployeeModel
     date: datetime.date
     availability_type: AvailabilityType
 
