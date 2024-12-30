@@ -17,7 +17,7 @@ from domain import Employee, Shift, Availability, AvailabilityType, ScheduleStat
 from helpers import join_all_combinations, pick_subset, pick_random
 
 api = FastAPI(title="Schedule API", version="1.0", description="API for scheduling")
-api.mount("/static", StaticFiles(directory="static"), name="static")
+api.mount("/typescript-frontend/dist", StaticFiles(directory="static"), name="static")
 
 def next_weekday(d, weekday):
     days_ahead = weekday - d.weekday()

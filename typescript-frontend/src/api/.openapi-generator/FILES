@@ -1,0 +1,12 @@
+.openapi-generator-ignore
+apis/ScheduleApi.ts
+apis/index.ts
+index.ts
+models/AvailabilityModel.ts
+models/AvailabilityType.ts
+models/EmployeeModel.ts
+models/EmployeeScheduleModel.ts
+models/ScheduleState.ts
+models/ShiftModel.ts
+models/index.ts
+runtime.ts

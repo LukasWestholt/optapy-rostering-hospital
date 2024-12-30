@@ -1,22 +1,28 @@
-import * as JSJoda from '@js-joda/core';
 import {Timeline, TimelineOptions} from 'vis-timeline';
 import {DataSet} from 'vis-data';
 
-import { ScheduleApi } from './api';
+import {ScheduleApi, ShiftModel} from './api';
+
+// Import the CSS styles from the installed npm packages
+import 'vis-timeline/styles/vis-timeline-graph2d.min.css';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import '@fortawesome/fontawesome-free/css/all.min.css';
 
 const api = new ScheduleApi();
 
-async function refreshSchedule() {
-    try {
-        const schedule = await api.getSchedule();
-        console.log(schedule);
-        // Verarbeiten Sie die Daten wie zuvor
-    } catch (error) {
-        console.error('Error fetching schedule:', error);
-    }
+function addDays(date: Date, days: number): Date {
+    const result = new Date(date);
+    result.setDate(result.getDate() + days);
+    return result;
 }
 
-document.getElementById('refreshButton').addEventListener('click', refreshSchedule);
+function DateToString(date: Date): String {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
 
 let autoRefreshIntervalId: number | null = null;
 const zoomMin = 2 * 1000 * 60 * 60 * 24; // 2 day in milliseconds
@@ -44,9 +50,6 @@ let byLocationItemDataSet: DataSet<any, any> = new DataSet();
 let byLocationTimeline = new Timeline(byLocationPanel, byLocationItemDataSet, byLocationGroupDataSet, byLocationTimelineOptions);
 
 const today = new Date();
-let windowStart = JSJoda.LocalDate.now().toString();
-let windowEnd = JSJoda.LocalDate.parse(windowStart).plusDays(7).toString();
-
 byEmployeeTimeline.addCustomTime(today, 'published');
 //byEmployeeTimeline.setCustomTimeMarker('Published Shifts', 'published', false);
 byEmployeeTimeline.setCustomTimeTitle('Published Shifts', 'published');
@@ -63,38 +66,11 @@ byLocationTimeline.addCustomTime(today, 'draft');
 //byLocationTimeline.setCustomTimeMarker('Draft Shifts', 'draft', false);
 byLocationTimeline.setCustomTimeTitle('Draft Shifts', 'draft');
 
-// Use fetch to set headers for all future requests
-const setDefaultHeaders = () => {
-    return new Headers({
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-    });
-};
-
-// Replacing jQuery's custom put and delete with fetch
-const customFetch = (url: string, method: string, data?: any) => {
-    const headers = setDefaultHeaders();
-    const requestOptions: RequestInit = {
-        method: method,
-        headers: headers,
-        body: data ? JSON.stringify(data) : null
-    };
-    return fetch(url, requestOptions).then(response => response.json());
-};
-
 document.addEventListener("DOMContentLoaded", () => {
-    document.querySelector("#refreshButton")?.addEventListener("click", () => {
-        refreshSchedule();
-    });
-    document.querySelector("#solveButton")?.addEventListener("click", () => {
-        solve();
-    });
-    document.querySelector("#stopSolvingButton")?.addEventListener("click", () => {
-        stopSolving();
-    });
-    document.querySelector("#publish")?.addEventListener("click", () => {
-        publish();
-    });
+    document.querySelector("#refreshButton")?.addEventListener("click", refreshSchedule);
+    document.querySelector("#solveButton")?.addEventListener("click", solve);
+    document.querySelector("#stopSolvingButton")?.addEventListener("click", stopSolving);
+    document.querySelector("#publish")?.addEventListener("click", publish);
 
     // HACK to allow vis-timeline to work within Bootstrap tabs
     document.querySelector("#byEmployeePanelTab")?.addEventListener('shown.bs.tab', () => {
@@ -123,9 +99,10 @@ function getAvailabilityColor(availabilityType: string): string {
     }
 }
 
-function getShiftColor(shift: any, availabilityMap: Map<string, string>): string {
-    const shiftDate = JSJoda.LocalDateTime.parse(shift.start).toLocalDate().toString();
-    const mapKey = shift.employee.name + '-' + shiftDate;
+function getShiftColor(shift: ShiftModel, availabilityMap: Map<string, string>): string {
+    const shiftDate = DateToString(shift.start);
+    console.log(availabilityMap); // TODO
+    const mapKey = (shift.employee?.name ?? "unknown") + '-' + shiftDate;
     if (availabilityMap.has(mapKey)) {
         return getAvailabilityColor(availabilityMap.get(mapKey) as string);
     } else {
@@ -133,11 +110,11 @@ function getShiftColor(shift: any, availabilityMap: Map<string, string>): string
     }
 }
 
-function refreshSchedule() {
-    fetch("/schedule")
-        .then(response => response.json())
-        .then(schedule => {
-            refreshSolvingButtons(schedule.solver_status != null && schedule.solver_status !== "NOT_SOLVING");
+async function refreshSchedule() {
+    try {
+        const schedule = await api.getScheduleScheduleGet();
+        console.log(schedule);
+        refreshSolvingButtons(schedule.solverStatus != null && schedule.solverStatus !== "NOT_SOLVING");
             const scoreElement = document.querySelector("#score");
             if (scoreElement) {
                 scoreElement.textContent = "Score: " + (schedule.score == null ? "?" : schedule.score);
@@ -148,11 +125,8 @@ function refreshSchedule() {
             const availabilityMap = new Map<string, string>();
 
             // Show only first 7 days of draft
-            const scheduleStart = schedule.schedule_state.first_draft_date;
-            const scheduleEnd = JSJoda.LocalDate.parse(scheduleStart).plusDays(7).toString();
-
-            windowStart = scheduleStart;
-            windowEnd = scheduleEnd;
+            const scheduleStart = schedule.scheduleState.firstDraftDate;
+            const scheduleEnd = DateToString(addDays(scheduleStart, 7));
 
             unassignedShifts.innerHTML = '';
             let unassignedShiftsCount = 0;
@@ -162,24 +136,24 @@ function refreshSchedule() {
             byEmployeeItemDataSet.clear();
             byLocationItemDataSet.clear();
 
-            byEmployeeTimeline.setCustomTime(schedule.schedule_state.last_historic_date, 'published');
-            byEmployeeTimeline.setCustomTime(schedule.schedule_state.first_draft_date, 'draft');
+            byEmployeeTimeline.setCustomTime(schedule.scheduleState.lastHistoricDate, 'published');
+            byEmployeeTimeline.setCustomTime(schedule.scheduleState.firstDraftDate, 'draft');
 
-            byLocationTimeline.setCustomTime(schedule.schedule_state.last_historic_date, 'published');
-            byLocationTimeline.setCustomTime(schedule.schedule_state.first_draft_date, 'draft');
+            byLocationTimeline.setCustomTime(schedule.scheduleState.lastHistoricDate, 'published');
+            byLocationTimeline.setCustomTime(schedule.scheduleState.firstDraftDate, 'draft');
 
-            schedule.availability_list.forEach((availability, index) => {
-                const availabilityDate = JSJoda.LocalDate.parse(availability.date);
-                const start = availabilityDate.atStartOfDay().toString();
-                const end = availabilityDate.plusDays(1).atStartOfDay().toString();
+            schedule.availabilityList.forEach((availability, index) => {
+                const availabilityDate = availability.date;
+                const start = DateToString(availabilityDate);
+                const end = DateToString(addDays(availabilityDate, 1));
                 const byEmployeeShiftElement = document.createElement('div');
                 const h5 = document.createElement('h5');
                 h5.className = "card-title mb-1";
-                h5.textContent = availability.availability_type;
+                h5.textContent = availability.availabilityType;
                 byEmployeeShiftElement.appendChild(h5);
 
-                const mapKey = availability.employee.name + '-' + availabilityDate.toString();
-                availabilityMap.set(mapKey, availability.availability_type);
+                const mapKey = availability.employee.name + '-' + DateToString(availabilityDate);
+                availabilityMap.set(mapKey, availability.availabilityType);
 
                 byEmployeeItemDataSet.add({
                     id: 'availability-' + index,
@@ -188,11 +162,11 @@ function refreshSchedule() {
                     start: start,
                     end: end,
                     type: "background",
-                    style: "opacity: 0.5; background-color: " + getAvailabilityColor(availability.availability_type),
+                    style: "opacity: 0.5; background-color: " + getAvailabilityColor(availability.availabilityType),
                 });
             });
 
-            schedule.employee_list.forEach((employee, index) => {
+            schedule.employeeList.forEach((employee) => {
                 const employeeGroupElement = document.createElement('div');
                 employeeGroupElement.className = "card-body p-2";
                 const h5 = document.createElement('h5');
@@ -200,7 +174,7 @@ function refreshSchedule() {
                 h5.textContent = employee.name;
                 employeeGroupElement.appendChild(h5);
 
-                const skillSet = employee.skill_set.map(skill => {
+                const skillSet = employee.skillSet.map(skill => {
                     const span = document.createElement('span');
                     span.className = "badge mr-1 mt-1";
                     span.style.backgroundColor = "#d3d7cf";
@@ -214,7 +188,7 @@ function refreshSchedule() {
                 byEmployeeGroupDataSet.add({id: employee.name, content: employeeGroupElement.outerHTML});
             });
 
-            schedule.shift_list.forEach((shift, index) => {
+            schedule.shiftList.forEach((shift, index) => {
                 if (groups.indexOf(shift.location) === -1) {
                     groups.push(shift.location);
                     byLocationGroupDataSet.add({
@@ -234,7 +208,7 @@ function refreshSchedule() {
                     byLocationShiftElement.appendChild(h5);
 
                     const skillsDiv = document.createElement('div');
-                    shift.required_skills.forEach(skill => {
+                    shift.requiredSkills.forEach(skill => {
                         const span = document.createElement('span');
                         span.className = "badge mr-1 mt-1";
                         span.style.backgroundColor = "#d3d7cf";
@@ -250,8 +224,8 @@ function refreshSchedule() {
                         style: "background-color: #EF292999"
                     });
                 } else {
-                    const allSkillsMatch = shift.required_skills.every(skill =>
-                        shift.employee.skill_set.has(skill)
+                    const allSkillsMatch = shift.requiredSkills.every(skill =>
+                        shift.employee?.skillSet.includes(skill)
                     );
                     const skillColor = (!allSkillsMatch ? '#ef2929' : '#8ae234');
                     const byEmployeeShiftElement = document.createElement('div');
@@ -262,7 +236,7 @@ function refreshSchedule() {
                     byEmployeeShiftElement.appendChild(h5Employee);
 
                     const skillsDiv = document.createElement('div');
-                    shift.required_skills.forEach(skill => {
+                    shift.requiredSkills.forEach(skill => {
                         const span = document.createElement('span');
                         span.className = "badge mr-1 mt-1";
                         span.style.backgroundColor = skillColor;
@@ -302,11 +276,13 @@ function refreshSchedule() {
 
             byEmployeeTimeline.setWindow(scheduleStart, scheduleEnd);
             byLocationTimeline.setWindow(scheduleStart, scheduleEnd);
-        });
+    } catch (error) {
+        console.error('Error fetching schedule:', error);
+    }
 }
 
 function solve() {
-    customFetch("/solve", "POST")
+    api.solveSolvePost()
         .then(() => {
             refreshSolvingButtons(true);
         })
@@ -316,7 +292,7 @@ function solve() {
 }
 
 function publish() {
-    customFetch("/publish", "POST")
+    api.publishPublishPost()
         .then(() => {
             refreshSolvingButtons(true);
         })
@@ -344,8 +320,8 @@ function refreshSolvingButtons(solving: boolean) {
     }
 }
 
-function stopSolving() {
-    customFetch("/stopSolving", "POST")
+async function stopSolving() {
+    api.stopSolvingStopSolvingPost()
         .then(() => {
             refreshSolvingButtons(false);
             refreshSchedule();

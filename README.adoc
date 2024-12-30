@@ -54,11 +54,11 @@ $ uvicorn main:api --reload
 ----
 $ cd typescript-frontend
 $ npm install
-$ npx tsc
+$ npm run build
 
 # install the latest version of "openapi-generator-cli"
 $ npm install @openapitools/openapi-generator-cli -g
-$ openapi-generator-cli generate -i http://localhost:8000/openapi.json -g typescript-fetch -o api
+$ openapi-generator-cli generate -i http://localhost:8000/openapi.json -g typescript-fetch -o src/api
 ----
 
 . Visit http://localhost:8000/static/index.html in your browser.
