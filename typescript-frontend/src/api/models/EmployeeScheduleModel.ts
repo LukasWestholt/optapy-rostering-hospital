@@ -77,13 +77,13 @@ export interface EmployeeScheduleModel {
      * @type {string}
      * @memberof EmployeeScheduleModel
      */
-    solverStatus: string;
+    solverStatus: string | null;
     /**
      * 
      * @type {string}
      * @memberof EmployeeScheduleModel
      */
-    score: string;
+    score: string | null;
 }
 
 /**

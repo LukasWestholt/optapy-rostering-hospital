@@ -43,7 +43,8 @@ let byEmployeeItemDataSet: DataSet<any, any> = new DataSet();
 let byEmployeeTimeline: Timeline = new Timeline(byEmployeePanel, byEmployeeItemDataSet, byEmployeeGroupDataSet, byEmployeeTimelineOptions);
 
 const byLocationPanel = document.getElementById("byLocationPanel") as HTMLElement;
-const byLocationTimelineOptions: TimelineOptions = { ...byEmployeeTimelineOptions, stack: undefined };
+const byLocationTimelineOptions: TimelineOptions = { ...byEmployeeTimelineOptions };
+delete byLocationTimelineOptions.stack;
 let byLocationGroupDataSet: DataSet<any, any> = new DataSet();
 let byLocationItemDataSet: DataSet<any, any> = new DataSet();
 let byLocationTimeline = new Timeline(byLocationPanel, byLocationItemDataSet, byLocationGroupDataSet, byLocationTimelineOptions);

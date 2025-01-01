@@ -156,8 +156,9 @@ def solver_status_to_string(solver_status: optapy.types.SolverStatus | None) -> 
 def score_to_string(score: optapy.score.HardSoftScore | None) -> str | None:
     return score.toString() if score is not None else None
 
-PossiblySerializedSolverStatus = Annotated[optapy.types.SolverStatus | None, BeforeValidator(string_to_solver_status), PlainSerializer(solver_status_to_string, return_type=str | None), WithJsonSchema({'type': 'string'}, mode='serialization'), WithJsonSchema({'type': 'string'}, mode='validation')]
-PossiblySerializedHardSoftScore = Annotated[optapy.score.HardSoftScore | None, BeforeValidator(string_to_solver_status), PlainSerializer(score_to_string, return_type=str | None), WithJsonSchema({'type': 'string'}, mode='serialization'), WithJsonSchema({'type': 'string'}, mode='validation')]
+stringOrNull = {"anyOf":[{"type":"string"},{"type":"null"}]}
+PossiblySerializedSolverStatus = Annotated[optapy.types.SolverStatus | None, BeforeValidator(string_to_solver_status), PlainSerializer(solver_status_to_string, return_type=str | None), WithJsonSchema(stringOrNull, mode='serialization'), WithJsonSchema(stringOrNull, mode='validation')]
+PossiblySerializedHardSoftScore = Annotated[optapy.score.HardSoftScore | None, BeforeValidator(string_to_solver_status), PlainSerializer(score_to_string, return_type=str | None), WithJsonSchema(stringOrNull, mode='serialization'), WithJsonSchema(stringOrNull, mode='validation')]
 
 class EmployeeScheduleModel(BaseModel):
     schedule_state: ScheduleState
