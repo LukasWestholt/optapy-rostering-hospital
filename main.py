@@ -9,6 +9,7 @@ from optapy.types import Duration, SolverStatus
 from optapy.score import HardSoftScore
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 
 from constraints import employee_scheduling_constraints
 from domain import Employee, Shift, Availability, AvailabilityType, ScheduleState, EmployeeSchedule, \
@@ -18,6 +19,13 @@ from helpers import join_all_combinations, pick_subset, pick_random
 
 api = FastAPI(title="Schedule API", version="1.0", description="API for scheduling")
 api.mount("/static", StaticFiles(directory="typescript-frontend/dist"), name="static")
+api.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 def next_weekday(d, weekday):
     days_ahead = weekday - d.weekday()

@@ -1,14 +1,15 @@
 import {Timeline, TimelineOptions} from 'vis-timeline';
 import {DataSet} from 'vis-data';
 
-import {ScheduleApi, ShiftModel} from './api';
+import {ScheduleApi, ShiftModel, Configuration} from './api';
 
 // Import the CSS styles from the installed npm packages
 import 'vis-timeline/styles/vis-timeline-graph2d.min.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
-const api = new ScheduleApi();
+const apiConfiguration = new Configuration({basePath: "http://127.0.0.1:8000"});
+const api = new ScheduleApi(apiConfiguration);
 
 function addDays(date: Date, days: number): Date {
     const result = new Date(date);
