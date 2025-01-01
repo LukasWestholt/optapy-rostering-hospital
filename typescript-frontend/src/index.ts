@@ -1,7 +1,7 @@
 import {Timeline, TimelineOptions} from 'vis-timeline';
 import {DataSet} from 'vis-data';
 
-import {ScheduleApi, ShiftModel, Configuration} from './api';
+import {ScheduleApi, ShiftModel, Configuration, AvailabilityType} from './api';
 
 // Import the CSS styles from the installed npm packages
 import 'vis-timeline/styles/vis-timeline-graph2d.min.css';
@@ -26,7 +26,7 @@ function DateToString(date: Date): String {
 
 
 let autoRefreshIntervalId: NodeJS.Timeout | null = null;
-const zoomMin = 2 * 1000 * 60 * 60 * 24; // 2 day in milliseconds
+const zoomMin = 2 * 1000 * 60 * 60 * 24; // 2 days in milliseconds
 const zoomMax = 4 * 7 * 1000 * 60 * 60 * 24; // 4 weeks in milliseconds
 
 const byEmployeePanel = document.getElementById("byEmployeePanel") as HTMLElement;
@@ -43,9 +43,7 @@ let byEmployeeItemDataSet: DataSet<any, any> = new DataSet();
 let byEmployeeTimeline: Timeline = new Timeline(byEmployeePanel, byEmployeeItemDataSet, byEmployeeGroupDataSet, byEmployeeTimelineOptions);
 
 const byLocationPanel = document.getElementById("byLocationPanel") as HTMLElement;
-const byLocationTimelineOptions: TimelineOptions = byEmployeeTimelineOptions && {
-    stack: undefined,
-};
+const byLocationTimelineOptions: TimelineOptions = { ...byEmployeeTimelineOptions, stack: undefined };
 let byLocationGroupDataSet: DataSet<any, any> = new DataSet();
 let byLocationItemDataSet: DataSet<any, any> = new DataSet();
 let byLocationTimeline = new Timeline(byLocationPanel, byLocationItemDataSet, byLocationGroupDataSet, byLocationTimelineOptions);
@@ -84,15 +82,15 @@ document.addEventListener("DOMContentLoaded", () => {
     refreshSchedule();
 });
 
-function getAvailabilityColor(availabilityType: string): string {
+function getAvailabilityColor(availabilityType: AvailabilityType): string {
     switch (availabilityType) {
-        case 'DESIRED':
+        case AvailabilityType.Desired:
             return ' #73d216'; // Tango Chameleon
 
-        case 'UNDESIRED':
+        case AvailabilityType.Undesired:
             return ' #f57900'; // Tango Orange
 
-        case 'UNAVAILABLE':
+        case AvailabilityType.Unavailable:
             return ' #ef2929 '; // Tango Scarlet Red
 
         default:
@@ -100,21 +98,17 @@ function getAvailabilityColor(availabilityType: string): string {
     }
 }
 
-function getShiftColor(shift: ShiftModel, availabilityMap: Map<string, string>): string {
+function getShiftColor(shift: ShiftModel, availabilityMap: Map<string, AvailabilityType>): string {
     const shiftDate = DateToString(shift.start);
+    console.log("availabilityMap");
     console.log(availabilityMap); // TODO
     const mapKey = (shift.employee?.name ?? "unknown") + '-' + shiftDate;
-    if (availabilityMap.has(mapKey)) {
-        return getAvailabilityColor(availabilityMap.get(mapKey) as string);
-    } else {
-        return " #729fcf"; // Tango Sky Blue
-    }
+    return availabilityMap.has(mapKey) ? getAvailabilityColor(availabilityMap.get(mapKey)!) : "#729fcf"; // Tango Sky Blue
 }
 
 async function refreshSchedule() {
     try {
         const schedule = await api.getScheduleScheduleGet();
-        console.log(schedule);
         refreshSolvingButtons(schedule.solverStatus != null && schedule.solverStatus !== "NOT_SOLVING");
             const scoreElement = document.querySelector("#score");
             if (scoreElement) {
@@ -123,7 +117,7 @@ async function refreshSchedule() {
 
             const unassignedShifts = document.querySelector("#unassignedShifts") as HTMLElement;
             const groups: string[] = [];
-            const availabilityMap = new Map<string, string>();
+            const availabilityMap = new Map<string, AvailabilityType>();
 
             // Show only first 7 days of draft
             const scheduleStart = schedule.scheduleState.firstDraftDate;
@@ -306,14 +300,14 @@ function refreshSolvingButtons(solving: boolean) {
     const solveButton = document.querySelector("#solveButton");
     const stopSolvingButton = document.querySelector("#stopSolvingButton");
     if (solving) {
-        solveButton?.classList.add('hidden');
-        stopSolvingButton?.classList.remove('hidden');
+        solveButton?.classList.add('d-none');
+        stopSolvingButton?.classList.remove('d-none');
         if (autoRefreshIntervalId == null) {
             autoRefreshIntervalId = setInterval(refreshSchedule, 2000);
         }
     } else {
-        solveButton?.classList.remove('hidden');
-        stopSolvingButton?.classList.add('hidden');
+        solveButton?.classList.remove('d-none');
+        stopSolvingButton?.classList.add('d-none');
         if (autoRefreshIntervalId != null) {
             clearInterval(autoRefreshIntervalId);
             autoRefreshIntervalId = null;
@@ -345,15 +339,15 @@ function showError(title: string, err: any) {
     const toastHeader = document.createElement('div');
     toastHeader.classList.add('toast-header', 'bg-danger');
     const strong = document.createElement('strong');
-    strong.classList.add('mr-auto', 'text-dark');
+    strong.classList.add('me-auto', 'text-dark');
     strong.textContent = "Error";
     toastHeader.appendChild(strong);
 
     const closeButton = document.createElement('button');
-    closeButton.classList.add('ml-2', 'mb-1', 'close');
-    closeButton.setAttribute('data-dismiss', 'toast');
+    closeButton.classList.add('ms-2', 'mb-1', 'btn-close');
+    closeButton.setAttribute('data-bs-dismiss', 'toast');
     closeButton.setAttribute('aria-label', 'Close');
-    closeButton.innerHTML = '&times;';
+    // closeButton.innerHTML = '&times;'; TODO
     toastHeader.appendChild(closeButton);
 
     const toastBody = document.createElement('div');
