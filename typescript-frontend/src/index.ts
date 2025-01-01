@@ -1,7 +1,7 @@
 import {Timeline, TimelineOptions} from 'vis-timeline';
 import {DataSet} from 'vis-data';
 
-import {ScheduleApi, ShiftModel, Configuration, AvailabilityType} from './api';
+import {ScheduleApi, ShiftModel, Configuration, AvailabilityType, EmployeeModel} from './api';
 
 // Import the CSS styles from the installed npm packages
 import 'vis-timeline/styles/vis-timeline-graph2d.min.css';
@@ -98,12 +98,13 @@ function getAvailabilityColor(availabilityType: AvailabilityType): string {
     }
 }
 
+function getAvailabilityMapKey(employee: EmployeeModel, availabilityDate: Date): string {
+    return employee.name + '-' + DateToString(availabilityDate);
+}
+
 function getShiftColor(shift: ShiftModel, availabilityMap: Map<string, AvailabilityType>): string {
-    const shiftDate = DateToString(shift.start);
-    console.log("availabilityMap");
-    console.log(availabilityMap); // TODO
-    const mapKey = (shift.employee?.name ?? "unknown") + '-' + shiftDate;
-    return availabilityMap.has(mapKey) ? getAvailabilityColor(availabilityMap.get(mapKey)!) : "#729fcf"; // Tango Sky Blue
+    const mapKey = shift.employee ? getAvailabilityMapKey(shift.employee, shift.start) : null;
+    return mapKey && availabilityMap.has(mapKey) ? getAvailabilityColor(availabilityMap.get(mapKey)!) : "#729fcf"; // Tango Sky Blue
 }
 
 async function refreshSchedule() {
@@ -147,8 +148,7 @@ async function refreshSchedule() {
                 h5.textContent = availability.availabilityType;
                 byEmployeeShiftElement.appendChild(h5);
 
-                const mapKey = availability.employee.name + '-' + DateToString(availabilityDate);
-                availabilityMap.set(mapKey, availability.availabilityType);
+                availabilityMap.set(getAvailabilityMapKey(availability.employee, availabilityDate), availability.availabilityType);
 
                 byEmployeeItemDataSet.add({
                     id: 'availability-' + index,
