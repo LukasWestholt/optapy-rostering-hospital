@@ -24,7 +24,7 @@ function DateToString(date: Date): String {
 }
 
 
-let autoRefreshIntervalId: number | null = null;
+let autoRefreshIntervalId: NodeJS.Timeout | null = null;
 const zoomMin = 2 * 1000 * 60 * 60 * 24; // 2 day in milliseconds
 const zoomMax = 4 * 7 * 1000 * 60 * 60 * 24; // 4 weeks in milliseconds
 
